@@ -1,0 +1,44 @@
+import { test, expect } from "@playwright/test";
+test("owner creates organization, opens protected data and logs out", async ({
+  page,
+}) => {
+  await page.goto("/dashboard");
+  await expect(page).toHaveURL(/login/);
+  await page.getByRole("link", { name: "Crear organización" }).click();
+  await page.getByLabel("Nombre completo").fill("Propietario de prueba");
+  const email = `owner-${crypto.randomUUID()}@example.test`;
+  const password = `Test-${crypto.randomUUID()}!`;
+  await page.getByLabel("Correo electrónico").fill(email);
+  await page.getByLabel("Contraseña", { exact: true }).fill(password);
+  await page
+    .getByRole("button", { name: "Crear cuenta de propietario" })
+    .click();
+  await expect(page).toHaveURL(/setup/);
+  await page.getByLabel("Nombre del gimnasio").fill("Gimnasio E2E");
+  await page.getByLabel("Primera sucursal").fill("Sucursal central");
+  await page.getByRole("button", { name: "Crear mi organización" }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  await expect(
+    page.getByRole("heading", { name: "Tu jornada, en un vistazo." }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Cerrar sesión" }).click();
+  await expect(page).toHaveURL(/login/);
+  await page.goto("/dashboard");
+  await expect(page).toHaveURL(/login/);
+  await page.getByLabel("Correo electrónico").fill(email);
+  await page.getByLabel("Contraseña", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Entrar a mi gimnasio" }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  const csrf = await page.request.post("/api/gym/catalog", {
+    headers: { origin: "https://untrusted.example" },
+    data: { kind: "service", name: "CSRF attempt" },
+  });
+  expect(csrf.status()).toBe(403);
+  await page.getByRole("button", { name: "Cerrar sesión" }).click();
+  await expect(page).toHaveURL(/login/);
+  const denied = await page.request.post("/api/gym/catalog", {
+    headers: { origin: "http://localhost:3000" },
+    data: { kind: "service", name: "Unauthorized" },
+  });
+  expect(denied.status()).toBe(401);
+});

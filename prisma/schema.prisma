@@ -1,0 +1,415 @@
+generator client {
+  provider = "prisma-client"
+  output = "../src/generated/prisma"
+}
+datasource db {
+  provider = "postgresql"
+}
+enum Role {
+  OWNER
+  ADMIN
+  RECEPTIONIST
+  TRAINER
+}
+enum MembershipState {
+  VALID
+  FROZEN
+  CANCELLED
+}
+enum LedgerKind {
+  MEMBERSHIP_PAYMENT
+  DAY_PASS
+  PRODUCT_SALE
+  EXPENSE
+  REFUND
+  CORRECTION
+}
+enum MovementKind {
+  PURCHASE
+  SALE
+  DAMAGED
+  ADJUSTMENT
+  RETURN
+}
+model User {
+  id String @id
+  name String
+  email String @unique
+  emailVerified Boolean @default(false)
+  image String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sessions Session[]
+  accounts Account[]
+  staff Staff?
+}
+model Session {
+  id String @id
+  token String @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+}
+model Account {
+  id String @id
+  accountId String
+  providerId String
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken String?
+  refreshToken String?
+  idToken String?
+  accessTokenExpiresAt DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope String?
+  password String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+model Verification {
+  id String @id
+  identifier String
+  value String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([identifier])
+}
+model RateLimit {
+  id String @id @default(cuid())
+  key String @unique
+  count Int
+  lastRequest BigInt
+}
+model Organization {
+  id String @id @default(cuid())
+  name String
+  currency String @default("USD")
+  timezone String @default("America/Guayaquil")
+  duplicateScanSeconds Int @default(60)
+  createdAt DateTime @default(now())
+  branches Branch[]
+  staff Staff[]
+  members Member[]
+  services Service[]
+  plans Plan[]
+  paymentMethods PaymentMethod[]
+  expenseCategories ExpenseCategory[]
+  products Product[]
+}
+model Branch {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id])
+  name String
+  address String @default("")
+  active Boolean @default(true)
+  staff Staff[]
+  members Member[]
+  memberships Membership[]
+  checkIns CheckIn[]
+  dayPasses DayPass[]
+  sales Sale[]
+  inventories Inventory[]
+  movements InventoryMovement[]
+  expenses Expense[]
+  ledger LedgerEntry[]
+  @@unique([organizationId, id])
+  @@unique([organizationId, name])
+}
+model Staff {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id])
+  userId String @unique
+  user User @relation(fields: [userId], references: [id])
+  branchId String
+  branch Branch @relation(fields: [organizationId, branchId], references: [organizationId, id])
+  role Role @default(RECEPTIONIST)
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  memberships Membership[]
+  checkIns CheckIn[]
+  dayPasses DayPass[]
+  sales Sale[]
+  movements InventoryMovement[]
+  expenses Expense[]
+  ledger LedgerEntry[]
+  audits AuditEvent[]
+  @@unique([organizationId, id])
+}
+model Member {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id])
+  branchId String
+  branch Branch @relation(fields: [organizationId, branchId], references: [organizationId, id])
+  firstName String
+  lastName String
+  phone String
+  email String?
+  notes String @default("")
+  emergencyContact String?
+  photoKey String?
+  active Boolean @default(true)
+  credential String @unique @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  memberships Membership[]
+  checkIns CheckIn[]
+  @@unique([organizationId, id])
+  @@index([organizationId, lastName, firstName])
+  @@index([organizationId, phone])
+}
+model Service {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id])
+  name String
+  active Boolean @default(true)
+  plans PlanService[]
+  checkIns CheckIn[]
+  dayPasses DayPass[]
+  @@unique([organizationId, id])
+  @@unique([organizationId, name])
+}
+model Plan {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id])
+  name String
+  description String @default("")
+  price Decimal @db.Decimal(14, 2)
+  durationDays Int
+  active Boolean @default(true)
+  services PlanService[]
+  memberships Membership[]
+  @@unique([organizationId, id])
+  @@unique([organizationId, name])
+}
+model PlanService {
+  organizationId String
+  planId String
+  serviceId String
+  plan Plan @relation(fields: [organizationId, planId], references: [organizationId, id])
+  service Service @relation(fields: [organizationId, serviceId], references: [organizationId, id])
+  @@id([organizationId, planId, serviceId])
+}
+model Membership {
+  id String @id @default(cuid())
+  organizationId String
+  branchId String
+  branch Branch @relation(fields: [organizationId, branchId], references: [organizationId, id])
+  memberId String
+  member Member @relation(fields: [organizationId, memberId], references: [organizationId, id])
+  planId String
+  plan Plan @relation(fields: [organizationId, planId], references: [organizationId, id])
+  planName String
+  serviceIds String[]
+  serviceNames String[]
+  startAt DateTime @db.Timestamptz(3)
+  endAt DateTime @db.Timestamptz(3)
+  state MembershipState @default(VALID)
+  frozenAt DateTime? @db.Timestamptz(3)
+  amount Decimal @db.Decimal(14, 2)
+  createdById String
+  createdBy Staff @relation(fields: [organizationId, createdById], references: [organizationId, id])
+  createdAt DateTime @default(now())
+  ledger LedgerEntry[]
+  @@unique([organizationId, id])
+  @@index([organizationId, memberId, endAt])
+  @@index([organizationId, branchId, endAt])
+}
+model PaymentMethod {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id])
+  name String
+  active Boolean @default(true)
+  ledger LedgerEntry[]
+  @@unique([organizationId, id])
+  @@unique([organizationId, name])
+}
+model CheckIn {
+  id String @id @default(cuid())
+  organizationId String
+  branchId String
+  branch Branch @relation(fields: [organizationId, branchId], references: [organizationId, id])
+  memberId String
+  member Member @relation(fields: [organizationId, memberId], references: [organizationId, id])
+  serviceId String
+  service Service @relation(fields: [organizationId, serviceId], references: [organizationId, id])
+  createdById String
+  createdBy Staff @relation(fields: [organizationId, createdById], references: [organizationId, id])
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@index([organizationId, branchId, createdAt])
+  @@index([organizationId, memberId, createdAt])
+}
+model DayPass {
+  id String @id @default(cuid())
+  organizationId String
+  branchId String
+  branch Branch @relation(fields: [organizationId, branchId], references: [organizationId, id])
+  serviceId String
+  service Service @relation(fields: [organizationId, serviceId], references: [organizationId, id])
+  amount Decimal @db.Decimal(14, 2)
+  createdById String
+  createdBy Staff @relation(fields: [organizationId, createdById], references: [organizationId, id])
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  ledger LedgerEntry[]
+  @@unique([organizationId, id])
+  @@index([organizationId, branchId, createdAt])
+}
+model Product {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id])
+  sku String
+  barcode String?
+  name String
+  description String @default("")
+  category String @default("")
+  cost Decimal @db.Decimal(14, 2)
+  price Decimal @db.Decimal(14, 2)
+  lowStock Int @default(5)
+  active Boolean @default(true)
+  inventories Inventory[]
+  movements InventoryMovement[]
+  lines SaleLine[]
+  @@unique([organizationId, id])
+  @@unique([organizationId, sku])
+  @@unique([organizationId, barcode])
+}
+model Inventory {
+  organizationId String
+  branchId String
+  branch Branch @relation(fields: [organizationId, branchId], references: [organizationId, id])
+  productId String
+  product Product @relation(fields: [organizationId, productId], references: [organizationId, id])
+  quantity Int @default(0)
+  @@id([organizationId, branchId, productId])
+}
+model InventoryMovement {
+  id String @id @default(cuid())
+  organizationId String
+  branchId String
+  branch Branch @relation(fields: [organizationId, branchId], references: [organizationId, id])
+  productId String
+  product Product @relation(fields: [organizationId, productId], references: [organizationId, id])
+  kind MovementKind
+  quantity Int
+  reason String
+  saleId String?
+  sale Sale? @relation(fields: [organizationId, saleId], references: [organizationId, id])
+  createdById String
+  createdBy Staff @relation(fields: [organizationId, createdById], references: [organizationId, id])
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@index([organizationId, branchId, productId, createdAt])
+}
+model Sale {
+  id String @id @default(cuid())
+  organizationId String
+  branchId String
+  branch Branch @relation(fields: [organizationId, branchId], references: [organizationId, id])
+  total Decimal @db.Decimal(14, 2)
+  createdById String
+  createdBy Staff @relation(fields: [organizationId, createdById], references: [organizationId, id])
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  lines SaleLine[]
+  ledger LedgerEntry[]
+  movements InventoryMovement[]
+  @@unique([organizationId, id])
+  @@index([organizationId, branchId, createdAt])
+}
+model SaleLine {
+  id String @id @default(cuid())
+  organizationId String
+  saleId String
+  sale Sale @relation(fields: [organizationId, saleId], references: [organizationId, id])
+  productId String
+  product Product @relation(fields: [organizationId, productId], references: [organizationId, id])
+  name String
+  quantity Int
+  unitPrice Decimal @db.Decimal(14, 2)
+  total Decimal @db.Decimal(14, 2)
+}
+model ExpenseCategory {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id])
+  name String
+  active Boolean @default(true)
+  expenses Expense[]
+  @@unique([organizationId, id])
+  @@unique([organizationId, name])
+}
+model Expense {
+  id String @id @default(cuid())
+  organizationId String
+  branchId String
+  branch Branch @relation(fields: [organizationId, branchId], references: [organizationId, id])
+  categoryId String
+  category ExpenseCategory @relation(fields: [organizationId, categoryId], references: [organizationId, id])
+  description String
+  notes String @default("")
+  reference String @default("")
+  amount Decimal @db.Decimal(14, 2)
+  occurredAt DateTime @db.Timestamptz(3)
+  createdById String
+  createdBy Staff @relation(fields: [organizationId, createdById], references: [organizationId, id])
+  createdAt DateTime @default(now())
+  ledger LedgerEntry[]
+  @@unique([organizationId, id])
+  @@index([organizationId, branchId, occurredAt])
+}
+model LedgerEntry {
+  id String @id @default(cuid())
+  organizationId String
+  branchId String
+  branch Branch @relation(fields: [organizationId, branchId], references: [organizationId, id])
+  kind LedgerKind
+  amount Decimal @db.Decimal(14, 2)
+  paymentMethodId String
+  paymentMethod PaymentMethod @relation(fields: [organizationId, paymentMethodId], references: [organizationId, id])
+  reference String @unique @default(uuid())
+  idempotencyKey String
+  requestHash String
+  membershipId String?
+  membership Membership? @relation(fields: [organizationId, membershipId], references: [organizationId, id])
+  saleId String?
+  sale Sale? @relation(fields: [organizationId, saleId], references: [organizationId, id])
+  expenseId String?
+  expense Expense? @relation(fields: [organizationId, expenseId], references: [organizationId, id])
+  dayPassId String?
+  dayPass DayPass? @relation(fields: [organizationId, dayPassId], references: [organizationId, id])
+  reversesId String?
+  reverses LedgerEntry? @relation("Reversal", fields: [organizationId, reversesId], references: [organizationId, id])
+  reversedBy LedgerEntry[] @relation("Reversal")
+  reason String @default("")
+  occurredAt DateTime @default(now()) @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  createdById String
+  createdBy Staff @relation(fields: [organizationId, createdById], references: [organizationId, id])
+  @@unique([organizationId, id])
+  @@unique([organizationId, idempotencyKey])
+  @@unique([organizationId, reversesId])
+  @@index([organizationId, branchId, occurredAt])
+}
+model AuditEvent {
+  id String @id @default(cuid())
+  organizationId String
+  actorId String
+  actor Staff @relation(fields: [organizationId, actorId], references: [organizationId, id])
+  action String
+  entityId String
+  detail Json
+  createdAt DateTime @default(now())
+  @@index([organizationId, createdAt])
+}
