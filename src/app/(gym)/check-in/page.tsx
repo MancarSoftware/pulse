@@ -76,7 +76,8 @@ export default async function CheckInPage({
           <p className="eyebrow">RECEPCIÓN</p>
           <h1>Control de acceso</h1>
           <p className="muted">
-            Cada ingreso validado. Cada socio, bien recibido.
+            Un ingreso por socio al día, con membresía vigente y servicio
+            contratado. El día se calcula en la hora de Ecuador.
           </p>
         </div>
       </div>

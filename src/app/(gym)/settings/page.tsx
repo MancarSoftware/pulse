@@ -9,6 +9,7 @@ import { formatMoney } from "@/shared/money";
 import { durationLabel } from "@/shared/presentation";
 import { DeleteAction } from "@/components/delete-action";
 import { Icon, type IconName } from "@/components/icon";
+import { whatsAppConfig } from "@/modules/notifications/whatsapp-provider";
 export default async function Settings({
   searchParams,
 }: {
@@ -27,7 +28,49 @@ export default async function Settings({
     type: "checkbox",
   };
   let content: React.ReactNode;
-  if (tab === "general") {
+  if (tab === "whatsapp") {
+    const configured = whatsAppConfig()?.organizationId === ctx.organizationId;
+    const pending = await db.whatsAppMessage.count({
+      where: { organizationId: ctx.organizationId, status: "PENDING" },
+    });
+    content = (
+      <>
+        <p className="eyebrow">COMUNICACIÓN CON SOCIOS</p>
+        <h2>WhatsApp y QR de acceso</h2>
+        <p className={`notice ${configured ? "success" : "warning"}`}>
+          {configured
+            ? "Credenciales configuradas. Mantén el procesador de mensajes activo."
+            : "Pendiente de conectar WhatsApp Business Platform con Meta."}
+        </p>
+        <p className="muted">
+          Al registrar el primer pago se prepara una bienvenida con el QR; los
+          siguientes pagos generan una confirmación de renovación. Cada mensaje
+          incluye el plan, los servicios y las fechas contratadas.
+        </p>
+        <p className="muted">
+          {pending} mensajes pendientes. Solo se contacta a socios con
+          autorización y celular válido. Un fallo de envío no afecta el pago ni
+          su acceso.
+        </p>
+        <h3>Para activarlo</h3>
+        <ol className="whatsapp-setup">
+          <li>Configura un número en WhatsApp Business Platform.</li>
+          <li>
+            Aprueba las plantillas de bienvenida y renovación con una imagen QR.
+          </li>
+          <li>
+            Configura la conexión y activa el procesador de mensajes en el
+            servidor.
+          </li>
+          <li>Registra la autorización del socio antes de cobrar.</li>
+        </ol>
+        <p className="muted">
+          El QR permite un ingreso diario mientras la membresía esté vigente. No
+          se envía un nuevo código cada día.
+        </p>
+      </>
+    );
+  } else if (tab === "general") {
     const organization = await db.organization.findUniqueOrThrow({
       where: { id: ctx.organizationId },
     });
@@ -443,6 +486,12 @@ export default async function Settings({
           >
             Categorías de gastos
           </Link>
+          <Link
+            href="/settings?tab=whatsapp"
+            aria-current={tab === "whatsapp" ? "page" : undefined}
+          >
+            WhatsApp
+          </Link>
           {can(ctx.role, "staff:write") && (
             <Link
               href="/settings?tab=staff"
@@ -454,7 +503,7 @@ export default async function Settings({
         </nav>
         <section className="panel settings-panel">
           {content}
-          {tab !== "general" && tab !== "staff" && (
+          {tab !== "general" && tab !== "staff" && tab !== "whatsapp" && (
             <p className="settings-note">
               <Icon name={"check" as IconName} /> Puedes eliminar registros sin
               uso. Deshabilita los utilizados para conservar su historial.

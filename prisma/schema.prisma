@@ -160,10 +160,12 @@ model Member {
   photoKey String?
   active Boolean @default(true)
   credential String @unique @default(uuid())
+  whatsappConsentAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   memberships Membership[]
   checkIns CheckIn[]
+  whatsappMessages WhatsAppMessage[]
   @@unique([organizationId, id])
   @@index([organizationId, lastName, firstName])
   @@index([organizationId, phone])
@@ -225,6 +227,7 @@ model Membership {
   createdBy Staff @relation(fields: [organizationId, createdById], references: [organizationId, id])
   createdAt DateTime @default(now())
   ledger LedgerEntry[]
+  whatsappMessages WhatsAppMessage[]
   @@unique([organizationId, id])
   @@index([organizationId, memberId, endAt])
   @@index([organizationId, branchId, endAt])
@@ -251,8 +254,38 @@ model CheckIn {
   createdById String
   createdBy Staff @relation(fields: [organizationId, createdById], references: [organizationId, id])
   createdAt DateTime @default(now()) @db.Timestamptz(3)
+  accessDay DateTime? @db.Date
+  @@unique([organizationId, memberId, accessDay])
   @@index([organizationId, branchId, createdAt])
   @@index([organizationId, memberId, createdAt])
+}
+enum WhatsAppStatus {
+  PENDING
+  PROCESSING
+  ACCEPTED
+  FAILED
+  REVIEW
+  CANCELLED
+}
+model WhatsAppMessage {
+  id String @id @default(cuid())
+  organizationId String
+  memberId String
+  member Member @relation(fields: [organizationId, memberId], references: [organizationId, id], map: "WhatsAppMessage_member_fkey")
+  membershipId String
+  membership Membership @relation(fields: [organizationId, membershipId], references: [organizationId, id], map: "WhatsAppMessage_membership_fkey")
+  kind String
+  status WhatsAppStatus @default(PENDING)
+  attempts Int @default(0)
+  nextAttemptAt DateTime @default(now())
+  processingAt DateTime?
+  sendingAt DateTime?
+  acceptedAt DateTime?
+  providerMessageId String?
+  lastError String?
+  createdAt DateTime @default(now())
+  @@unique([organizationId, membershipId])
+  @@index([organizationId, status, nextAttemptAt])
 }
 model DayPass {
   id String @id @default(cuid())

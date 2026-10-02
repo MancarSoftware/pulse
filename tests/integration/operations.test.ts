@@ -1,4 +1,4 @@
-import { beforeAll, afterAll, describe, expect, it } from "vitest";
+import { beforeAll, afterAll, describe, expect, it, vi } from "vitest";
 import { db } from "@/infrastructure/db";
 import { setupOrganization } from "@/modules/organizations/service";
 import { saveCatalog } from "@/modules/organizations/catalog";
@@ -551,4 +551,386 @@ it("paginates members and transactions in 12-record pages without changing repor
   ).toBe(13);
   expect(report1.sources[0]._sum.amount?.toString()).toBe("26");
   expect(report2.sources[0]._sum.amount?.toString()).toBe("26");
+});
+
+describe("WhatsApp membership outbox", () => {
+  it("queues a single welcome after payment and a renewal for the next payment", async () => {
+    const { dispatchWhatsApp } =
+      await import("@/modules/notifications/whatsapp-delivery");
+    const f = await fixture();
+    await saveMember(
+      f.ctx,
+      {
+        firstName: "Andrea",
+        lastName: "López",
+        phone: "0990000000",
+        branchId: f.ctx.branchId,
+        whatsappOptIn: true,
+      },
+      f.member.id,
+    );
+    const request = renewal(f);
+    await renewMembership(f.ctx, request);
+    await renewMembership(f.ctx, request);
+    const messages = await db.whatsAppMessage.findMany({
+      where: { memberId: f.member.id },
+    });
+    expect(messages).toHaveLength(1);
+    expect(messages[0].kind).toBe("WELCOME");
+    const config = {
+      organizationId: f.ctx.organizationId,
+      token: "test",
+      phoneNumberId: "123",
+      version: "v99.0",
+      welcomeTemplate: "welcome",
+      renewalTemplate: "renewal",
+      language: "es",
+    };
+    let uploads = 0,
+      sends = 0;
+    const provider = {
+      uploadQr: async (credential: string) => {
+        expect(credential).toBe(
+          (await db.member.findUniqueOrThrow({ where: { id: f.member.id } }))
+            .credential,
+        );
+        uploads++;
+        return "media";
+      },
+      sendTemplate: async (input: { kind: string; parameters: string[] }) => {
+        expect(input.parameters).toHaveLength(6);
+        sends++;
+        return "wamid";
+      },
+    };
+    expect(await dispatchWhatsApp(null, provider)).toMatchObject({
+      configured: false,
+      processed: 0,
+    });
+    expect(
+      await dispatchWhatsApp(
+        { ...config, organizationId: b.ctx.organizationId },
+        provider,
+      ),
+    ).toMatchObject({ processed: 0 });
+    await Promise.all([
+      dispatchWhatsApp(config, provider),
+      dispatchWhatsApp(config, provider),
+    ]);
+    expect(sends).toBe(1);
+    expect(uploads).toBe(1);
+    expect(
+      (
+        await db.whatsAppMessage.findUniqueOrThrow({
+          where: { id: messages[0].id },
+        })
+      ).status,
+    ).toBe("ACCEPTED");
+    const latest = await db.membership.findFirstOrThrow({
+      where: { memberId: f.member.id },
+    });
+    await renewMembership(f.ctx, {
+      ...renewal(f),
+      expectedLatestId: latest.id,
+    });
+    const renewed = await db.whatsAppMessage.findFirstOrThrow({
+      where: { memberId: f.member.id, kind: "RENEWAL" },
+    });
+    expect(renewed.status).toBe("PENDING");
+  });
+  it("never queues a message without permission and cancels pending messages on withdrawal", async () => {
+    const f = await fixture();
+    await renewMembership(f.ctx, renewal(f));
+    expect(
+      await db.whatsAppMessage.count({ where: { memberId: f.member.id } }),
+    ).toBe(0);
+    await saveMember(
+      f.ctx,
+      {
+        firstName: "Andrea",
+        lastName: "López",
+        phone: "0990000000",
+        branchId: f.ctx.branchId,
+        whatsappOptIn: true,
+      },
+      f.member.id,
+    );
+    const latest = await db.membership.findFirstOrThrow({
+      where: { memberId: f.member.id },
+    });
+    await renewMembership(f.ctx, {
+      ...renewal(f),
+      expectedLatestId: latest.id,
+    });
+    await saveMember(
+      f.ctx,
+      {
+        firstName: "Andrea",
+        lastName: "López",
+        phone: "0990000000",
+        branchId: f.ctx.branchId,
+        whatsappOptIn: false,
+      },
+      f.member.id,
+    );
+    expect(
+      (
+        await db.whatsAppMessage.findFirstOrThrow({
+          where: { memberId: f.member.id },
+        })
+      ).status,
+    ).toBe("CANCELLED");
+  });
+  it("requires review after an ambiguous send and prevents cross-tenant retry", async () => {
+    const { dispatchWhatsApp } =
+      await import("@/modules/notifications/whatsapp-delivery");
+    const { WhatsAppFailure } =
+      await import("@/modules/notifications/whatsapp-provider");
+    const { retryWhatsApp } =
+      await import("@/modules/notifications/whatsapp-retry");
+    const f = await fixture();
+    await saveMember(
+      f.ctx,
+      {
+        firstName: "Andrea",
+        lastName: "López",
+        phone: "0990000000",
+        branchId: f.ctx.branchId,
+        whatsappOptIn: true,
+      },
+      f.member.id,
+    );
+    await renewMembership(f.ctx, renewal(f));
+    const config = {
+      organizationId: f.ctx.organizationId,
+      token: "test",
+      phoneNumberId: "123",
+      version: "v99.0",
+      welcomeTemplate: "welcome",
+      renewalTemplate: "renewal",
+      language: "es",
+    };
+    let sends = 0;
+    const provider = {
+      uploadQr: async () => "media",
+      sendTemplate: async () => {
+        sends++;
+        throw new WhatsAppFailure("review", "Resultado incierto");
+      },
+    };
+    await dispatchWhatsApp(config, provider);
+    await dispatchWhatsApp(config, provider);
+    expect(sends).toBe(1);
+    const job = await db.whatsAppMessage.findFirstOrThrow({
+      where: { memberId: f.member.id },
+    });
+    expect(job.status).toBe("REVIEW");
+    await expect(
+      retryWhatsApp(b.ctx, { messageId: job.id }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(
+      retryWhatsApp(f.ctx, { messageId: job.id }),
+    ).rejects.toMatchObject({ code: "INVALID_STATE" });
+  });
+});
+
+it("allows only one simultaneous admission and resets at Ecuador midnight", async () => {
+  const f = await fixture();
+  await renewMembership(f.ctx, renewal(f));
+  const member = await db.member.findUniqueOrThrow({
+    where: { id: f.member.id },
+  });
+  const today = dayStart(localDate());
+  await db.membership.updateMany({
+    where: { memberId: member.id },
+    data: { startAt: today, endAt: addDays(today, 30) },
+  });
+  vi.useFakeTimers({ toFake: ["Date"] });
+  try {
+    vi.setSystemTime(new Date(today.getTime() + 86370000));
+    const request = {
+      branchId: f.ctx.branchId,
+      serviceId: f.service.id,
+      credential: member.credential,
+    };
+    const results = await Promise.allSettled([
+      checkIn(f.ctx, request),
+      checkIn(f.ctx, request),
+    ]);
+    expect(
+      results.filter((result) => result.status === "fulfilled"),
+    ).toHaveLength(1);
+    vi.setSystemTime(new Date(today.getTime() + 86380000));
+    await expect(
+      checkIn(f.ctx, {
+        branchId: f.ctx.branchId,
+        serviceId: f.service.id,
+        memberId: member.id,
+      }),
+    ).rejects.toMatchObject({ status: 409 });
+    vi.setSystemTime(new Date(today.getTime() + 86410000));
+    await checkIn(f.ctx, request);
+    expect(await db.checkIn.count({ where: { memberId: member.id } })).toBe(2);
+    vi.setSystemTime(new Date(today.getTime() + 90000000));
+    await expect(checkIn(f.ctx, request)).rejects.toMatchObject({
+      code: "DAILY_ACCESS_USED",
+    });
+  } finally {
+    vi.useRealTimers();
+  }
+});
+
+it("retries rejected messages only when explicitly requested and cancels revoked contracts", async () => {
+  const { dispatchWhatsApp } =
+    await import("@/modules/notifications/whatsapp-delivery");
+  const { WhatsAppFailure } =
+    await import("@/modules/notifications/whatsapp-provider");
+  const { retryWhatsApp } =
+    await import("@/modules/notifications/whatsapp-retry");
+  const f = await fixture();
+  await saveMember(
+    f.ctx,
+    {
+      firstName: "Andrea",
+      lastName: "López",
+      phone: "0990000000",
+      branchId: f.ctx.branchId,
+      whatsappOptIn: true,
+    },
+    f.member.id,
+  );
+  await renewMembership(f.ctx, renewal(f));
+  const config = {
+    organizationId: f.ctx.organizationId,
+    token: "test",
+    phoneNumberId: "123",
+    version: "v99.0",
+    welcomeTemplate: "welcome",
+    renewalTemplate: "renewal",
+    language: "es",
+  };
+  const rejected = {
+    uploadQr: async () => "media",
+    sendTemplate: async () => {
+      throw new WhatsAppFailure("failed", "Plantilla rechazada");
+    },
+  };
+  await dispatchWhatsApp(config, rejected);
+  const job = await db.whatsAppMessage.findFirstOrThrow({
+    where: { memberId: f.member.id },
+  });
+  expect(job.status).toBe("FAILED");
+  await expect(
+    retryWhatsApp({ ...f.ctx, role: "TRAINER" }, { messageId: job.id }),
+  ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  await retryWhatsApp(f.ctx, { messageId: job.id });
+  let sent = 0;
+  await dispatchWhatsApp(config, {
+    uploadQr: async () => "media",
+    sendTemplate: async () => {
+      sent++;
+      return "wamid";
+    },
+  });
+  expect(sent).toBe(1);
+  const latest = await db.membership.findFirstOrThrow({
+    where: { memberId: f.member.id },
+  });
+  await renewMembership(f.ctx, { ...renewal(f), expectedLatestId: latest.id });
+  const future = await db.membership.findFirstOrThrow({
+    where: { memberId: f.member.id, id: { not: latest.id } },
+  });
+  await db.membership.update({
+    where: { id: future.id },
+    data: { state: "CANCELLED" },
+  });
+  await dispatchWhatsApp(config, {
+    uploadQr: async () => {
+      throw Error("Should not upload");
+    },
+    sendTemplate: async () => {
+      throw Error("Should not send");
+    },
+  });
+  expect(
+    (
+      await db.whatsAppMessage.findFirstOrThrow({
+        where: { membershipId: future.id },
+      })
+    ).status,
+  ).toBe("CANCELLED");
+});
+
+it("pauses frozen messages without consuming retries and checks consent again after loading the QR", async () => {
+  const { dispatchWhatsApp } =
+    await import("@/modules/notifications/whatsapp-delivery");
+  const f = await fixture();
+  await saveMember(
+    f.ctx,
+    {
+      firstName: "Andrea",
+      lastName: "López",
+      phone: "0990000000",
+      branchId: f.ctx.branchId,
+      whatsappOptIn: true,
+    },
+    f.member.id,
+  );
+  await renewMembership(f.ctx, renewal(f));
+  const job = await db.whatsAppMessage.findFirstOrThrow({
+    where: { memberId: f.member.id },
+  });
+  await db.membership.update({
+    where: { id: job.membershipId },
+    data: { state: "FROZEN" },
+  });
+  const config = {
+    organizationId: f.ctx.organizationId,
+    token: "test",
+    phoneNumberId: "123",
+    version: "v99.0",
+    welcomeTemplate: "welcome",
+    renewalTemplate: "renewal",
+    language: "es",
+  };
+  let sent = 0;
+  const provider = {
+    uploadQr: async () => {
+      await saveMember(
+        f.ctx,
+        {
+          firstName: "Andrea",
+          lastName: "López",
+          phone: "0990000000",
+          branchId: f.ctx.branchId,
+          whatsappOptIn: false,
+        },
+        f.member.id,
+      );
+      return "media";
+    },
+    sendTemplate: async () => {
+      sent++;
+      return "wamid";
+    },
+  };
+  await dispatchWhatsApp(config, provider);
+  expect(
+    (await db.whatsAppMessage.findUniqueOrThrow({ where: { id: job.id } }))
+      .attempts,
+  ).toBe(0);
+  await db.membership.update({
+    where: { id: job.membershipId },
+    data: { state: "VALID" },
+  });
+  await db.whatsAppMessage.update({
+    where: { id: job.id },
+    data: { nextAttemptAt: new Date() },
+  });
+  await dispatchWhatsApp(config, provider);
+  expect(sent).toBe(0);
+  expect(
+    (await db.whatsAppMessage.findUniqueOrThrow({ where: { id: job.id } }))
+      .status,
+  ).toBe("CANCELLED");
 });

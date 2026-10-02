@@ -52,6 +52,14 @@ export default async function Members({
                   required: false,
                 },
                 {
+                  name: "whatsappOptIn",
+                  label:
+                    "El socio autorizó recibir su membresía y QR por WhatsApp",
+                  type: "checkbox",
+                  value: "false",
+                  hint: "Confirma su autorización. Se envía al registrar el pago; requiere un celular ecuatoriano de 10 dígitos que empiece en 09.",
+                },
+                {
                   name: "branchId",
                   label: "Sucursal",
                   type: "select",

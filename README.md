@@ -38,7 +38,7 @@ Para revisar desde el teléfono, conecta ambos dispositivos al mismo Wi-Fi y eje
 | S3_ACCESS_KEY_ID / S3_SECRET_ACCESS_KEY | Credenciales del bucket privado, únicamente en servidor                          |
 | ALLOW_DEMO_SEED / DEMO_PASSWORD         | Exclusivamente seed local; habilitación explícita y contraseña de 12+ caracteres |
 
-Las fotografías se decodifican y convierten a WebP, limitadas a 2 MB/16 megapíxeles. Se sirven por una ruta autenticada; no requieren buckets públicos. Sin S3, la operación informa que no está configurada. WhatsApp/email permanecen deshabilitados mediante adaptadores explícitos: no se simulan envíos. Las alertas internas consultan vencimientos reales.
+Las fotografías se decodifican y convierten a WebP, limitadas a 2 MB/16 megapíxeles. Se sirven por una ruta autenticada; no requieren buckets públicos. Sin S3, la operación informa que no está configurada. WhatsApp utiliza Meta Cloud API con autorización del socio, plantillas aprobadas y una cola persistente; ver [configuración y worker](docs/whatsapp.md). Sin credenciales no se envían mensajes. Email permanece deshabilitado. Las alertas internas consultan vencimientos reales. El QR permite un ingreso por socio por día calendario de Ecuador durante la membresía contratada.
 
 ## Arquitectura y seguridad
 

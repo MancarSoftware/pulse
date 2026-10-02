@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Prisma } from "@/generated/prisma/client";
 import { serializable } from "@/infrastructure/db";
 import { authorize, type Context } from "@/modules/auth/permissions";
 import {
@@ -9,7 +10,7 @@ import {
 import { id, amount, paymentFields } from "@/shared/schemas";
 import { AppError, requireFound } from "@/shared/errors";
 import { money } from "@/shared/money";
-import { remainingDays } from "@/shared/dates";
+import { remainingDays, dayStart, localDate, addDays } from "@/shared/dates";
 export const checkInSchema = z
   .object({
     branchId: id,
@@ -68,11 +69,13 @@ export async function checkIn(ctx: Context, input: unknown) {
     const organization = requireFound(
       await tx.organization.findUnique({ where: { id: ctx.organizationId } }),
     );
+    const accessDay = dayStart(localDate(now));
     const duplicate = await tx.checkIn.findFirst({
       where: {
         organizationId: ctx.organizationId,
         memberId: member.id,
         createdAt: {
+          gte: accessDay,
           gt: new Date(
             now.getTime() - organization.duplicateScanSeconds * 1000,
           ),
@@ -85,6 +88,19 @@ export async function checkIn(ctx: Context, input: unknown) {
         "El ingreso ya fue registrado hace unos instantes",
         409,
       );
+    const usedToday = await tx.checkIn.findFirst({
+      where: {
+        organizationId: ctx.organizationId,
+        memberId: member.id,
+        createdAt: { gte: accessDay, lt: addDays(accessDay, 1) },
+      },
+    });
+    if (usedToday)
+      throw new AppError(
+        "DAILY_ACCESS_USED",
+        "El socio ya utilizó su ingreso de hoy. Puede volver mañana mientras su membresía esté vigente.",
+        409,
+      );
     const attendance = await tx.checkIn.create({
       data: {
         organizationId: ctx.organizationId,
@@ -92,6 +108,8 @@ export async function checkIn(ctx: Context, input: unknown) {
         serviceId: data.serviceId,
         memberId: member.id,
         createdById: ctx.staffId,
+        accessDay,
+        createdAt: now,
       },
     });
     return {
@@ -100,6 +118,17 @@ export async function checkIn(ctx: Context, input: unknown) {
       remainingDays: remainingDays(membership.endAt),
       services: membership.serviceNames,
     };
+  }).catch((error) => {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    )
+      throw new AppError(
+        "DAILY_ACCESS_USED",
+        "El socio ya utilizó su ingreso de hoy.",
+        409,
+      );
+    throw error;
   });
 }
 export const dayPassSchema = z

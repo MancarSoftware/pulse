@@ -14,6 +14,8 @@ import { formatDate, membershipStatus, renewalWindow } from "@/shared/dates";
 import { formatMoney } from "@/shared/money";
 import { AppError } from "@/shared/errors";
 import { membershipLabels, durationLabel } from "@/shared/presentation";
+import { whatsAppConfig } from "@/modules/notifications/whatsapp-provider";
+import { ecuadorWhatsAppPhone } from "@/modules/notifications/whatsapp-content";
 export default async function MemberProfile({
   params,
 }: {
@@ -40,6 +42,15 @@ export default async function MemberProfile({
     margin: 2,
   });
   const latest = member.memberships.find((m) => m.state !== "CANCELLED");
+  const whatsappReady = whatsAppConfig()?.organizationId === ctx.organizationId;
+  const notificationLabels = {
+    PENDING: "Pendiente",
+    PROCESSING: "Procesando",
+    ACCEPTED: "Aceptado por WhatsApp",
+    FAILED: "Falló el envío",
+    REVIEW: "Revisión necesaria",
+    CANCELLED: "Cancelado",
+  };
   return (
     <>
       <div className="inline">
@@ -100,6 +111,14 @@ export default async function MemberProfile({
                     value: b.id,
                     label: b.name,
                   })),
+                },
+                {
+                  name: "whatsappOptIn",
+                  label:
+                    "El socio autorizó recibir su membresía y QR por WhatsApp",
+                  type: "checkbox",
+                  value: String(Boolean(member.whatsappConsentAt)),
+                  hint: "Si cambias el teléfono, se retira la autorización. Guarda el nuevo número y confirma su autorización nuevamente.",
                 },
                 {
                   name: "active",
@@ -294,6 +313,11 @@ export default async function MemberProfile({
           )}
           <section className="panel">
             <h2>Credencial de acceso</h2>
+            <p className="muted">
+              Un ingreso por día, durante los meses calendario contratados. El
+              mismo QR sirve al renovar; la vigencia y los servicios se
+              comprueban al escanear.
+            </p>
             {member.photoKey && (
               <Image
                 src={`/api/gym/members/${member.id}/photo`}
@@ -317,6 +341,87 @@ export default async function MemberProfile({
             <p className="receipt">{member.credential}</p>
             {can(ctx.role, "members:write") && (
               <MemberPhotoUpload memberId={member.id} />
+            )}
+          </section>
+          <section className="panel" aria-label="Notificaciones de WhatsApp">
+            <h2>Membresía por WhatsApp</h2>
+            <p className="muted">
+              {member.whatsappConsentAt
+                ? "El socio autorizó recibir mensajes."
+                : "Sin autorización. Actívala en Editar perfil cuando el socio lo confirme."}
+            </p>
+            {!ecuadorWhatsAppPhone(member.phone) && (
+              <p className="notice warning">
+                Se requiere un celular ecuatoriano de 10 dígitos que comience en
+                09.
+              </p>
+            )}
+            {!whatsappReady && (
+              <p className="notice warning">
+                WhatsApp pendiente de configuración. Los mensajes no se enviarán
+                hasta conectar Meta. El QR está disponible arriba.
+              </p>
+            )}
+            {member.whatsappMessages.map((message) => (
+              <div className="notification-row" key={message.id}>
+                <strong>
+                  {message.kind === "WELCOME" ? "Bienvenida" : "Renovación"}
+                </strong>
+                <span className="status">
+                  {notificationLabels[message.status]}
+                </span>
+                <small>
+                  {formatDate(message.createdAt)}
+                  {message.lastError ? ` · ${message.lastError}` : ""}
+                </small>
+                {message.status === "ACCEPTED" && (
+                  <small>
+                    Meta aceptó el envío; esto no confirma que el socio lo haya
+                    recibido o leído.
+                  </small>
+                )}
+                {message.status === "REVIEW" &&
+                  can(ctx.role, "payments:write") && (
+                    <Modal
+                      title="Revisar antes de reenviar"
+                      trigger="Revisar envío"
+                    >
+                      <p className="notice warning">
+                        WhatsApp pudo haber recibido el mensaje. Comprueba el
+                        envío con Meta o con el socio para evitar duplicarlo.
+                      </p>
+                      <OperationForm
+                        endpoint="/api/gym/whatsapp-retry"
+                        fixed={{ messageId: message.id }}
+                        label="Confirmar reenvío"
+                        fields={[
+                          {
+                            name: "verifiedNotSent",
+                            label:
+                              "Verifiqué que el mensaje no fue recibido por WhatsApp",
+                            type: "checkbox",
+                            value: "false",
+                          },
+                        ]}
+                      />
+                    </Modal>
+                  )}
+                {message.status === "FAILED" &&
+                  can(ctx.role, "payments:write") && (
+                    <OperationForm
+                      endpoint="/api/gym/whatsapp-retry"
+                      fields={[]}
+                      fixed={{ messageId: message.id }}
+                      label="Reintentar envío"
+                    />
+                  )}
+              </div>
+            ))}
+            {!member.whatsappMessages.length && (
+              <p className="muted">
+                La bienvenida se prepara con el primer pago y la renovación con
+                los pagos siguientes.
+              </p>
             )}
           </section>
         </div>

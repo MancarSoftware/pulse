@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "next dev",
+    "worker:whatsapp": "tsx --env-file=.env scripts/whatsapp-worker.ts",
     "dev:mobile": "node --env-file=.env scripts/mobile-preview.mjs",
     "build": "prisma generate && next build",
     "start": "next start",

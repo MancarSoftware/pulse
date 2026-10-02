@@ -2067,3 +2067,27 @@ summary {
   font-weight: 400;
   line-height: 1.6;
 }
+.notification-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 0;
+  border-top: 1px solid #e5ebe7;
+}
+.notification-row small {
+  flex-basis: 100%;
+  color: var(--muted);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.whatsapp-setup {
+  padding-left: 20px;
+  line-height: 1.8;
+  font-size: 13px;
+}
+.notice.warning {
+  background: #fff5df;
+  color: #79531e;
+  border: 1px solid #ead5a9;
+}

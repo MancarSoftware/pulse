@@ -13,6 +13,21 @@ import { moveInventory } from "@/modules/inventory/service";
 import { recordExpense } from "@/modules/expenses/service";
 import { AppError } from "@/shared/errors";
 import { deleteCatalog } from "@/modules/organizations/deletion";
+import { after } from "next/server";
+import { dispatchWhatsApp } from "@/modules/notifications/whatsapp-delivery";
+import { retryWhatsApp } from "@/modules/notifications/whatsapp-retry";
+import { whatsAppConfig } from "@/modules/notifications/whatsapp-provider";
+function scheduleWhatsApp(organizationId: string) {
+  const config = whatsAppConfig();
+  if (config?.organizationId !== organizationId) return;
+  after(async () => {
+    try {
+      await dispatchWhatsApp(config);
+    } catch {
+      /* Worker recovers durable pending jobs. */
+    }
+  });
+}
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ resource: string }> },
@@ -39,10 +54,18 @@ export async function POST(
     switch (resource) {
       case "members":
         return Response.json(await saveMember(ctx, body));
+      case "whatsapp-retry": {
+        const result = await retryWhatsApp(ctx, body);
+        scheduleWhatsApp(ctx.organizationId);
+        return Response.json(result);
+      }
       case "catalog":
         return Response.json(await saveCatalog(ctx, body));
-      case "renewals":
-        return Response.json(await renewMembership(ctx, body));
+      case "renewals": {
+        const result = await renewMembership(ctx, body);
+        scheduleWhatsApp(ctx.organizationId);
+        return Response.json(result);
+      }
       case "membership-state":
         return Response.json(await changeMembershipState(ctx, body));
       case "reversals":

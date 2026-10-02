@@ -102,6 +102,11 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
   ).toBe(false);
   await dialog.getByLabel("Email", { exact: true }).fill("andrea@example.test");
   await dialog.getByLabel("Teléfono").fill("0990000011");
+  await dialog
+    .getByRole("checkbox", {
+      name: "El socio autorizó recibir su membresía y QR por WhatsApp",
+    })
+    .check();
   await dialog.getByRole("button", { name: "Registrar socio" }).click();
   await expect(page).toHaveURL(/members\//);
   const memberUrl = page.url();
@@ -118,6 +123,40 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
   await expect(
     page.getByRole("img", { name: "Credencial QR de Andrea" }),
   ).toBeVisible();
+  const whatsapp = page.getByRole("region", {
+    name: "Notificaciones de WhatsApp",
+  });
+  await expect(whatsapp).toContainText("Bienvenida");
+  await expect(whatsapp).toContainText("Pendiente");
+  await expect(whatsapp).toContainText("WhatsApp pendiente de configuración");
+  const message = await db.whatsAppMessage.findFirstOrThrow({
+    where: { memberId },
+  });
+  await db.whatsAppMessage.update({
+    where: { id: message.id },
+    data: { status: "REVIEW" },
+  });
+  await page.reload();
+  await page
+    .getByRole("button", { name: "Revisar envío", exact: true })
+    .click();
+  const reviewDialog = page.getByRole("dialog");
+  await reviewDialog.getByRole("button", { name: "Confirmar reenvío" }).click();
+  await expect(reviewDialog.getByRole("alert")).toContainText(
+    "requieren revisión",
+  );
+  await reviewDialog
+    .getByRole("checkbox", {
+      name: "Verifiqué que el mensaje no fue recibido por WhatsApp",
+    })
+    .check();
+  await reviewDialog.getByRole("button", { name: "Confirmar reenvío" }).click();
+  await expect(reviewDialog.getByRole("status")).toContainText(
+    "Mensaje en cola",
+  );
+  await reviewDialog
+    .getByRole("button", { name: "Cerrar", exact: true })
+    .click();
   await page.goto("/check-in?q=Andrea");
   const result = page.locator("section").filter({
     has: page.getByRole("heading", { name: "Resultado de búsqueda" }),

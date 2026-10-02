@@ -8,6 +8,7 @@ import { AppError, requireFound } from "@/shared/errors";
 import { serializable } from "@/infrastructure/db";
 import { branchScope } from "@/modules/transactions/service";
 import { dayStart, localDate, addDays } from "@/shared/dates";
+import { ecuadorWhatsAppPhone } from "@/modules/notifications/whatsapp-content";
 export const renewalSchema = z
   .object({
     ...paymentFields,
@@ -75,6 +76,9 @@ export async function renewMembership(ctx: Context, input: unknown) {
       );
     if (latest?.state === "FROZEN")
       throw new AppError("FROZEN", "Reactiva la membresía antes de renovar");
+    const previousContracts = await tx.membership.count({
+      where: { organizationId: ctx.organizationId, memberId: member.id },
+    });
     const membership = await tx.membership.create({
       data: {
         organizationId: ctx.organizationId,
@@ -106,6 +110,16 @@ export async function renewMembership(ctx: Context, input: unknown) {
     await audit(tx, ctx, "membership.paid", membership.id, {
       receipt: entry.reference,
     });
+    if (member.whatsappConsentAt && ecuadorWhatsAppPhone(member.phone)) {
+      await tx.whatsAppMessage.create({
+        data: {
+          organizationId: ctx.organizationId,
+          memberId: member.id,
+          membershipId: membership.id,
+          kind: previousContracts ? "RENEWAL" : "WELCOME",
+        },
+      });
+    }
     return entry;
   });
 }

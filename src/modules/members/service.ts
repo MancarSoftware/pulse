@@ -18,6 +18,7 @@ export const memberSchema = z
     notes: z.string().max(2000).default(""),
     emergencyContact: z.string().max(200).optional(),
     active: z.boolean().default(true),
+    whatsappOptIn: z.boolean().optional(),
   })
   .strict();
 export async function saveMember(
@@ -27,8 +28,10 @@ export async function saveMember(
 ) {
   authorize(ctx, "members:write");
   const data = memberSchema.parse(input);
+  const { whatsappOptIn, ...values } = data;
   return serializable(async (tx) => {
     await branchScope(tx, ctx, data.branchId);
+    let consentAt: Date | null = whatsappOptIn ? new Date() : null;
     if (memberId) {
       const previous = requireFound(
         await tx.member.findFirst({
@@ -36,6 +39,10 @@ export async function saveMember(
         }),
       );
       authorizeBranch(ctx, previous.branchId);
+      consentAt =
+        previous.phone !== data.phone || whatsappOptIn === false
+          ? null
+          : (previous.whatsappConsentAt ?? (whatsappOptIn ? new Date() : null));
       if (
         previous.branchId !== data.branchId &&
         (await tx.membership.count({
@@ -62,11 +69,16 @@ export async function saveMember(
               id: memberId,
             },
           },
-          data: { ...data, email: data.email || null },
+          data: {
+            ...values,
+            whatsappConsentAt: consentAt,
+            email: data.email || null,
+          },
         })
       : await tx.member.create({
           data: {
-            ...data,
+            ...values,
+            whatsappConsentAt: consentAt,
             email: data.email || null,
             organizationId: ctx.organizationId,
           },
@@ -76,8 +88,25 @@ export async function saveMember(
       ctx,
       memberId ? "member.updated" : "member.created",
       member.id,
-      { branchId: member.branchId, active: member.active },
+      {
+        branchId: member.branchId,
+        active: member.active,
+        whatsappConsent: Boolean(member.whatsappConsentAt),
+      },
     );
+    if (!member.whatsappConsentAt)
+      await tx.whatsAppMessage.updateMany({
+        where: {
+          organizationId: ctx.organizationId,
+          memberId: member.id,
+          status: { in: ["PENDING", "PROCESSING"] },
+          sendingAt: null,
+        },
+        data: {
+          status: "CANCELLED",
+          lastError: "El socio no autorizó mensajes por WhatsApp.",
+        },
+      });
     return { id: member.id };
   });
 }
@@ -99,6 +128,7 @@ export async function getMember(ctx: Context, memberId: string) {
           : { branchId: ctx.branchId }),
       },
       include: {
+        whatsappMessages: { orderBy: { createdAt: "desc" }, take: 10 },
         memberships: { orderBy: { endAt: "desc" }, take: 50 },
         checkIns: {
           orderBy: { createdAt: "desc" },
