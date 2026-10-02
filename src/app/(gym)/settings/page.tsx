@@ -62,7 +62,7 @@ export default async function Settings({
   } else if (tab === "plans") {
     const plans = await db.plan.findMany({
       where: scope,
-      include: { services: true },
+      include: { services: { include: { service: true } } },
       orderBy: { name: "asc" },
       take: 300,
     });
@@ -121,7 +121,13 @@ export default async function Settings({
             <tbody>
               {plans.map((p) => (
                 <tr key={p.id}>
-                  <td>{p.name}</td>
+                  <td>
+                    {p.name}
+                    <small className="plan-services">
+                      Incluye:{" "}
+                      {p.services.map((s) => s.service.name).join(", ")}
+                    </small>
+                  </td>
                   <td>
                     {p.durationMonths
                       ? durationLabel(p.durationMonths)

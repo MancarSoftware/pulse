@@ -67,7 +67,17 @@ try {
     kind: "service",
     name: "CrossFit",
   });
-  const dance = await saveCatalog(ctx, { kind: "service", name: "Baile" });
+  const dance = await saveCatalog(ctx, {
+    kind: "service",
+    name: "Bailoterapia",
+  });
+  await saveCatalog(ctx, {
+    kind: "plan",
+    name: "Mensual · Bailoterapia",
+    price: "20.00",
+    durationMonths: 1,
+    serviceIds: [dance.id],
+  });
   const basic = await saveCatalog(ctx, {
     kind: "plan",
     name: "Mensual · Máquinas",

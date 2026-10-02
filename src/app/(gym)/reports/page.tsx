@@ -52,7 +52,8 @@ export default async function Reports({
           <h1>Reportes y caja</h1>
           <p className="muted">
             Flujo de dinero registrado. No representa utilidad contable ni saldo
-            bancario.
+            bancario. Los totales corresponden al período seleccionado. El
+            historial se conserva para consultar meses anteriores.
           </p>
         </div>
       </div>
