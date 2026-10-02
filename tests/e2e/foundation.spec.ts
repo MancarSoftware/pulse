@@ -21,6 +21,36 @@ test("owner creates organization, opens protected data and logs out", async ({
   await expect(
     page.getByRole("heading", { name: "Tu jornada, en un vistazo." }),
   ).toBeVisible();
+  await page.setViewportSize({ width: 375, height: 812 });
+  const menu = page.getByRole("button", { name: "Menú", exact: true });
+  await menu.click();
+  await expect(
+    page.getByRole("dialog", { name: "Menú principal" }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(menu).toBeFocused();
+  await menu.click();
+  await page
+    .getByRole("dialog")
+    .getByRole("link", { name: "Socios y membresías" })
+    .click();
+  await expect(page).toHaveURL(/members/);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByLabel("Buscar en socios").fill("Persona inexistente");
+  await page.getByRole("button", { name: "Realizar búsqueda" }).click();
+  await expect(page).toHaveURL(/q=Persona/);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  expect(
+    await page
+      .locator("#main")
+      .evaluate((el) => getComputedStyle(el).animationName),
+  ).toBe("none");
+  await page.setViewportSize({ width: 1280, height: 900 });
   await page.getByRole("button", { name: "Cerrar sesión" }).click();
   await expect(page).toHaveURL(/login/);
   await page.goto("/dashboard");

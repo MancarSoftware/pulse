@@ -31,14 +31,14 @@ export function RevenueChart({
             isAnimationActive={false}
             name="Entradas USD"
             dataKey="revenue"
-            fill="#166546"
+            fill="#087f72"
             radius={[3, 3, 0, 0]}
           />
           <Bar
             isAnimationActive={false}
             name="Salidas USD"
             dataKey="outflow"
-            fill="#b17436"
+            fill="#c57949"
             radius={[3, 3, 0, 0]}
           />
         </BarChart>

@@ -8,6 +8,7 @@
 - Regresión temporal: conexión con servidor configurado en otra zona, persistencia contra reloj real y roundtrip del instante de medianoche de Ecuador.
 - Playwright/Chromium: registro, organización, sucursal inicial, empleado, servicios y plan, socio, pago y QR, ingreso permitido/denegado, pase, producto/stock/POS, gasto, renovación y reportes; aislamiento por sesión, login/logout, rol de recepción y CSRF.
 - Layout de reportes a 375, 768 y 1366 px; capturas y comprobación de ausencia de overflow del documento.
+- Rediseño: navegación móvil con apertura, Escape, retorno del foco y cierre al cambiar de ruta; búsqueda global de socios y preferencia de movimiento reducido. Revisión visual de dashboard, socios, acceso, POS, reportes y configuración a 375, 768 y 1440 px; menú y formulario de alta a 320 px. En teléfonos los vencimientos se muestran en filas adaptadas con la acción visible, sin scroll horizontal.
 - Compilación de producción, TypeScript estricto, lint sin advertencias y auditoría npm.
 
 ## Correcciones durante verificación

@@ -1,6 +1,17 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Icon, type IconName } from "./icon";
+const icons: Record<string, IconName> = {
+  "/dashboard": "dashboard",
+  "/members": "members",
+  "/check-in": "access",
+  "/pos": "pos",
+  "/inventory": "inventory",
+  "/expenses": "expenses",
+  "/reports": "reports",
+  "/settings": "settings",
+};
 export function NavLink({
   href,
   children,
@@ -18,7 +29,8 @@ export function NavLink({
           : undefined
       }
     >
-      {children}
+      <Icon name={icons[href] ?? "arrow"} />
+      <span>{children}</span>
     </Link>
   );
 }

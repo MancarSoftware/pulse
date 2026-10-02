@@ -4,6 +4,8 @@ import { db } from "@/infrastructure/db";
 import { can } from "@/modules/auth/permissions";
 import { Logout } from "@/components/auth-form";
 import { NavLink } from "@/components/nav-link";
+import { AppNavigation } from "@/components/app-navigation";
+import { Icon } from "@/components/icon";
 export default async function GymLayout({
   children,
 }: {
@@ -18,7 +20,7 @@ export default async function GymLayout({
       <a className="skip" href="#main">
         Saltar al contenido
       </a>
-      <aside className="sidebar">
+      <AppNavigation>
         <Link href="/dashboard" className="wordmark">
           MANCAR<span>GYM</span>
         </Link>
@@ -26,7 +28,16 @@ export default async function GymLayout({
           <span className="org-icon">M</span>
           <div>
             <strong>{organization.name}</strong>
-            <small>{ctx.role}</small>
+            <small>
+              {
+                {
+                  OWNER: "Propietario",
+                  ADMIN: "Administrador",
+                  RECEPTIONIST: "Recepción",
+                  TRAINER: "Entrenador",
+                }[ctx.role]
+              }
+            </small>
           </div>
         </div>
         <nav aria-label="Navegación principal">
@@ -53,14 +64,36 @@ export default async function GymLayout({
           )}
         </nav>
         <div className="sidebar-bottom">
-          <small>MANCAR SOFTWARE</small>
+          <div className="sidebar-signature">
+            <Icon name="bolt" />
+            <strong>
+              Todo listo.
+              <br />A mover tu gimnasio.
+            </strong>
+          </div>
+          <small>MANCAR · GESTIÓN EN MOVIMIENTO</small>
           <Logout />
         </div>
-      </aside>
+      </AppNavigation>
       <div className="workspace">
         <header className="topbar">
-          <span>CONTROL DE TU GIMNASIO</span>
-          <span className="badge">{organization.currency} · Ecuador</span>
+          <form action="/members" className="global-search" role="search">
+            <Icon name="search" />
+            <input
+              name="q"
+              aria-label="Buscar en socios"
+              placeholder="Buscar por nombre o teléfono…"
+            />
+            <button type="submit" aria-label="Realizar búsqueda">
+              <Icon name="arrow" />
+            </button>
+          </form>
+          <div className="topbar-meta">
+            <span className="locale-dot" /> {organization.currency} · Ecuador
+            <span className="profile-avatar" aria-label={organization.name}>
+              {organization.name.slice(0, 1).toUpperCase()}
+            </span>
+          </div>
         </header>
         <main id="main">{children}</main>
         <footer>Registros internos de operación · America/Guayaquil</footer>

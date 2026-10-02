@@ -361,14 +361,49 @@ export default async function Settings({
         </div>
       </div>
       <nav className="tabs" aria-label="Configuración">
-        <Link href="/settings?tab=general">General</Link>
-        <Link href="/settings">Servicios</Link>
-        <Link href="/settings?tab=plans">Planes</Link>
-        <Link href="/settings?tab=branches">Sucursales</Link>
-        <Link href="/settings?tab=methods">Métodos de pago</Link>
-        <Link href="/settings?tab=categories">Categorías de gastos</Link>
+        <Link
+          href="/settings?tab=general"
+          aria-current={tab === "general" ? "page" : undefined}
+        >
+          General
+        </Link>
+        <Link
+          href="/settings"
+          aria-current={tab === "services" ? "page" : undefined}
+        >
+          Servicios
+        </Link>
+        <Link
+          href="/settings?tab=plans"
+          aria-current={tab === "plans" ? "page" : undefined}
+        >
+          Planes
+        </Link>
+        <Link
+          href="/settings?tab=branches"
+          aria-current={tab === "branches" ? "page" : undefined}
+        >
+          Sucursales
+        </Link>
+        <Link
+          href="/settings?tab=methods"
+          aria-current={tab === "methods" ? "page" : undefined}
+        >
+          Métodos de pago
+        </Link>
+        <Link
+          href="/settings?tab=categories"
+          aria-current={tab === "categories" ? "page" : undefined}
+        >
+          Categorías de gastos
+        </Link>
         {can(ctx.role, "staff:write") && (
-          <Link href="/settings?tab=staff">Equipo</Link>
+          <Link
+            href="/settings?tab=staff"
+            aria-current={tab === "staff" ? "page" : undefined}
+          >
+            Equipo
+          </Link>
         )}
       </nav>
       <section className="panel">{content}</section>

@@ -118,11 +118,19 @@ export default async function Members({
                   return (
                     <tr key={m.id}>
                       <td>
-                        <strong>
-                          {m.firstName} {m.lastName}
-                        </strong>
-                        <br />
-                        <small>{m.branch.name}</small>
+                        <div className="member-cell">
+                          <span className="member-avatar" aria-hidden="true">
+                            {m.firstName.slice(0, 1)}
+                            {m.lastName.slice(0, 1)}
+                          </span>
+                          <div>
+                            <strong>
+                              {m.firstName} {m.lastName}
+                            </strong>
+                            <br />
+                            <small>{m.branch.name}</small>
+                          </div>
+                        </div>
                       </td>
                       {ctx.role !== "TRAINER" && <td>{m.phone}</td>}
                       <td>{membership?.planName ?? "—"}</td>

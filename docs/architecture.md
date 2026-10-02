@@ -20,7 +20,9 @@ User/Session/Account/Verification/RateLimit son autenticación. Organization →
 
 ## Dirección visual
 
-Concepto: una mesa de control de recepción. Precisión operativa, tono cercano y deportivo sobrio. Navegación grafito, fondos hueso, verde bosque para acciones, ámbar para vencimientos y rojo para denegación. Tipografía de sistema sans, cifras tabulares, títulos compactos, separadores y tablas densas con aire suficiente. Sin fotografía decorativa: la identidad se expresa en marca tipográfica, ritmo y feedback. Radios 6–10 px, iconografía mínima, foco visible y transiciones cortas. En móvil la navegación se desplaza horizontalmente y las tareas de recepción mantienen controles táctiles; tablas con scroll deliberado.
+Concepto: un club deportivo en movimiento, diseñado para recepción. Las acciones de acceso y venta preceden a la actividad actual; el seguimiento de membresías y el balance del período ocupan una segunda zona. Navegación tinta, lima para la acción principal y la ruta activa, teal para acciones operativas, verde para membresías vigentes, melocotón para actividad de recepción y rojo para errores. La tipografía Segoe UI/sistema combina títulos deportivos compactos con cifras tabulares grandes. Iconos SVG de trazo consistente, superficies claras, bordes suaves y radios de 9–18 px. El indicador circular muestra únicamente el porcentaje real de socios activos con membresía vigente; no representa una meta ni datos ficticios.
+
+La búsqueda de socios permanece disponible en la cabecera. En móvil se usa un menú lateral Radix con foco contenido, cierre con Escape y cierre al navegar; las tablas conservan desplazamiento horizontal deliberado. Las transiciones duran 150–350 ms y el indicador se revela una vez; `prefers-reduced-motion` desactiva animaciones y transiciones. El sistema no depende de imágenes decorativas, fuentes remotas ni librerías adicionales de animación. Los colores y la jerarquía se comparten con formularios, caja, reportes, estados y autenticación.
 
 ## Pruebas y fases
 
