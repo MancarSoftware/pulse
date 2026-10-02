@@ -70,16 +70,16 @@ try {
   const dance = await saveCatalog(ctx, { kind: "service", name: "Baile" });
   const basic = await saveCatalog(ctx, {
     kind: "plan",
-    name: "Fuerza · 30 días",
+    name: "Mensual · Máquinas",
     price: "25.00",
-    durationDays: 30,
+    durationMonths: 1,
     serviceIds: [machines.id],
   });
   const full = await saveCatalog(ctx, {
     kind: "plan",
-    name: "Completo · 30 días",
+    name: "Mensual · Todos los servicios",
     price: "45.00",
-    durationDays: 30,
+    durationMonths: 1,
     serviceIds: [machines.id, crossfit.id, dance.id],
   });
   await saveCatalog(ctx, {

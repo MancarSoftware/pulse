@@ -3,6 +3,8 @@
 ## Cobertura local
 
 - Pruebas unitarias: fechas de calendario, límites de vencimiento, dinero exacto y permisos.
+- Membresías de 1/3/6 meses: octubre completo, fines de mes, años bisiestos, renovación anticipada y reactivación de contratos vencidos; validación de teléfono numérico de hasta 10 dígitos y email con formato válido.
+- Corrección de contratos antiguos: auditoría, idempotencia, permisos del propietario, conservación de pausas y continuidad de períodos prepagados.
 - React Testing Library: etiquetas accesibles, errores de servidor y conservación de idempotencia tras fallo de conexión.
 - Integración PostgreSQL: tenants distintos, claves foráneas compuestas, permisos, sucursales, renovación/pago atómicos, doble renovación concurrente, duplicados de acceso, vencimientos, congelación y reactivación, última unidad concurrente, rollback de venta con varias líneas, reversiones, libro inmutable, importes de gastos y pases.
 - Regresión temporal: conexión con servidor configurado en otra zona, persistencia contra reloj real y roundtrip del instante de medianoche de Ecuador.

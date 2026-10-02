@@ -10,10 +10,10 @@ import { can } from "@/modules/auth/permissions";
 import { OperationForm } from "@/components/operation-form";
 import { Modal } from "@/components/modal";
 import { MemberPhotoUpload } from "@/components/member-photo";
-import { formatDate, membershipStatus } from "@/shared/dates";
+import { formatDate, membershipStatus, renewalWindow } from "@/shared/dates";
 import { formatMoney } from "@/shared/money";
 import { AppError } from "@/shared/errors";
-import { membershipLabels } from "@/shared/presentation";
+import { membershipLabels, durationLabel } from "@/shared/presentation";
 export default async function MemberProfile({
   params,
 }: {
@@ -73,11 +73,21 @@ export default async function MemberProfile({
                   label: "Apellidos",
                   value: member.lastName,
                 },
-                { name: "phone", label: "Teléfono", value: member.phone },
+                {
+                  name: "phone",
+                  label: "Teléfono",
+                  value: member.phone,
+                  type: "tel",
+                  numericOnly: true,
+                  maxLength: 10,
+                  pattern: "[0-9]{1,10}",
+                  hint: "Solo números. Máximo 10 dígitos.",
+                },
                 {
                   name: "email",
                   label: "Email",
                   type: "email",
+                  hint: "Correo válido con @, por ejemplo nombre@dominio.com. Opcional.",
                   value: member.email ?? "",
                   required: false,
                 },
@@ -133,6 +143,12 @@ export default async function MemberProfile({
                       <tr key={m.id}>
                         <td>
                           <strong>{m.planName}</strong>
+                          {m.durationMonths && (
+                            <>
+                              <br />
+                              <small>{durationLabel(m.durationMonths)}</small>
+                            </>
+                          )}
                           <br />
                           <small>{m.serviceNames.join(", ")}</small>
                           <br />
@@ -195,8 +211,9 @@ export default async function MemberProfile({
               <p className="eyebrow">RENOVACIÓN / NUEVO CONTRATO</p>
               <h2>Registrar membresía</h2>
               <p className="muted">
-                Se conserva el tiempo ya pagado. Un plan nuevo comienza cuando
-                termina el anterior.
+                Elige 1, 3 o 6 meses calendario. Incluye fines de semana y
+                acceso hasta finalizar el último día. Una renovación anticipada
+                comienza al terminar el contrato vigente.
               </p>
               {data.plans.length && data.methods.length ? (
                 <OperationForm
@@ -213,9 +230,17 @@ export default async function MemberProfile({
                       name: "planId",
                       label: "Plan",
                       type: "select",
+                      hint: "Selecciona una duración y revisa las fechas antes de cobrar.",
                       options: data.plans.map((p) => ({
                         value: p.id,
-                        label: `${p.name} · ${p.durationDays} días · ${formatMoney(p.price)}`,
+                        label: `${durationLabel(p.durationMonths!)} · ${p.name} · ${formatMoney(p.price)}`,
+                        detail: (() => {
+                          const period = renewalWindow(
+                            p.durationMonths!,
+                            latest?.endAt ?? null,
+                          );
+                          return `Acceso desde ${formatDate(period.startAt)} hasta ${formatDate(new Date(period.endAt.getTime() - 1))}, inclusive. Servicios: ${p.services.map((s) => s.service.name).join(", ")}.`;
+                        })(),
                       })),
                     },
                     {

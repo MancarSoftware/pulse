@@ -49,7 +49,12 @@ export const catalogSchema = z.discriminatedUnion("kind", [
       name,
       description: z.string().max(1000).default(""),
       price: amount,
-      durationDays: z.coerce.number().int().min(1).max(3660),
+      durationMonths: z.coerce
+        .number()
+        .refine(
+          (value) => [1, 3, 6].includes(value),
+          "Selecciona 1, 3 o 6 meses",
+        ),
       serviceIds: z.array(id).min(1).max(30),
       active,
       id: id.optional(),
@@ -189,7 +194,8 @@ export async function saveCatalog(ctx: Context, input: unknown) {
           name: data.name,
           description: data.description,
           price: money(data.price),
-          durationDays: data.durationDays,
+          durationMonths: data.durationMonths,
+          durationDays: null,
           active: data.active,
         };
         const plan = data.id
@@ -295,7 +301,7 @@ export async function saveCatalog(ctx: Context, input: unknown) {
     const detail: Record<string, string | number | boolean> = {};
     if ("active" in data) detail.active = data.active;
     if ("price" in data) detail.price = data.price;
-    if ("durationDays" in data) detail.durationDays = data.durationDays;
+    if ("durationMonths" in data) detail.durationMonths = data.durationMonths;
     if ("serviceIds" in data) detail.serviceIds = data.serviceIds.join(",");
     if ("role" in data) detail.role = data.role;
     if ("branchId" in data) detail.branchId = data.branchId;

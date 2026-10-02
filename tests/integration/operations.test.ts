@@ -15,6 +15,7 @@ import { reverseTransaction } from "@/modules/transactions/reversal";
 import { financialReport } from "@/modules/reports/queries";
 import type { Context } from "@/modules/auth/permissions";
 import { localDate, dayStart, addDays } from "@/shared/dates";
+import { correctCalendarMemberships } from "@/modules/memberships/calendar-correction";
 async function fixture() {
   const userId = crypto.randomUUID();
   await db.user.create({
@@ -38,9 +39,9 @@ async function fixture() {
   const service = await saveCatalog(ctx, { kind: "service", name: "Machines" });
   const plan = await saveCatalog(ctx, {
     kind: "plan",
-    name: "30 days",
+    name: "Mensual",
     price: "25.00",
-    durationDays: 30,
+    durationMonths: 1,
     serviceIds: [service.id],
   });
   const member = await saveMember(ctx, {
@@ -108,7 +109,7 @@ describe("tenant isolation and authorization", () => {
         kind: "plan",
         name: "Leak",
         price: "10",
-        durationDays: 1,
+        durationMonths: 1,
         serviceIds: [b.service.id],
       }),
     ).rejects.toMatchObject({ code: "INVALID_SERVICES" });
@@ -139,6 +140,106 @@ describe("tenant isolation and authorization", () => {
   });
 });
 describe("memberships and attendance", () => {
+  it("corrects legacy contracts, preserves pauses and shifts prepaid periods with an audit", async () => {
+    const legacy = await fixture();
+    await db.plan.update({
+      where: { id: legacy.plan.id },
+      data: { durationDays: 30 },
+    });
+    await renewMembership(legacy.ctx, renewal(legacy));
+    const first = await db.membership.findFirstOrThrow({
+      where: { memberId: legacy.member.id },
+    });
+    await renewMembership(legacy.ctx, {
+      ...renewal(legacy),
+      expectedLatestId: first.id,
+    });
+    const second = await db.membership.findFirstOrThrow({
+      where: { memberId: legacy.member.id, id: { not: first.id } },
+    });
+    await db.membership.update({
+      where: { id: first.id },
+      data: {
+        durationMonths: null,
+        startAt: dayStart("2026-10-01"),
+        endAt: dayStart("2026-11-05"),
+        state: "FROZEN",
+        frozenAt: dayStart("2026-10-10"),
+      },
+    });
+    await db.membership.update({
+      where: { id: second.id },
+      data: {
+        durationMonths: null,
+        startAt: dayStart("2026-11-05"),
+        endAt: dayStart("2026-12-05"),
+        state: "FROZEN",
+        frozenAt: dayStart("2026-10-10"),
+      },
+    });
+    const result = await correctCalendarMemberships(legacy.ctx);
+    expect(result).toEqual({ corrected: 2, shifted: 0, review: [] });
+    const corrected = await db.membership.findMany({
+      where: { memberId: legacy.member.id },
+      orderBy: { startAt: "asc" },
+    });
+    expect(corrected[0].endAt).toEqual(dayStart("2026-11-06"));
+    expect(corrected[1].startAt).toEqual(corrected[0].endAt);
+    expect(corrected[1].endAt).toEqual(dayStart("2026-12-06"));
+    expect(
+      corrected.every((m) => m.state === "FROZEN" && m.durationMonths === 1),
+    ).toBe(true);
+    expect(
+      await db.auditEvent.count({
+        where: {
+          organizationId: legacy.ctx.organizationId,
+          action: "membership.calendar.corrected",
+        },
+      }),
+    ).toBe(2);
+    expect(
+      await db.ledgerEntry.count({
+        where: {
+          organizationId: legacy.ctx.organizationId,
+          kind: "MEMBERSHIP_PAYMENT",
+        },
+      }),
+    ).toBe(2);
+    expect(await correctCalendarMemberships(legacy.ctx)).toEqual({
+      corrected: 0,
+      shifted: 0,
+      review: [],
+    });
+    await expect(
+      correctCalendarMemberships({ ...legacy.ctx, role: "RECEPTIONIST" }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+  it("rejects invalid member contacts before persistence", async () => {
+    for (const override of [
+      { phone: "099abc1234" },
+      { phone: "09912345678" },
+      { email: "sin-arroba.example.com" },
+    ]) {
+      await expect(
+        saveMember(a.ctx, {
+          firstName: "Invalid",
+          lastName: "Contact",
+          phone: "0991234567",
+          branchId: a.ctx.branchId,
+          ...override,
+        }),
+      ).rejects.toMatchObject({ name: "ZodError" });
+    }
+    expect(
+      await db.member.count({
+        where: {
+          organizationId: a.ctx.organizationId,
+          firstName: "Invalid",
+          lastName: "Contact",
+        },
+      }),
+    ).toBe(0);
+  });
   it("atomically records payment and membership, retries idempotently", async () => {
     const data = renewal();
     await renewMembership(a.ctx, data);

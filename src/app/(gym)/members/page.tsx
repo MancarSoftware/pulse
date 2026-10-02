@@ -35,11 +35,20 @@ export default async function Members({
               fields={[
                 { name: "firstName", label: "Nombres" },
                 { name: "lastName", label: "Apellidos" },
-                { name: "phone", label: "Teléfono" },
+                {
+                  name: "phone",
+                  label: "Teléfono",
+                  type: "tel",
+                  numericOnly: true,
+                  maxLength: 10,
+                  pattern: "[0-9]{1,10}",
+                  hint: "Solo números. Máximo 10 dígitos.",
+                },
                 {
                   name: "email",
                   label: "Email",
                   type: "email",
+                  hint: "Correo válido con @, por ejemplo nombre@dominio.com. Opcional.",
                   required: false,
                 },
                 {

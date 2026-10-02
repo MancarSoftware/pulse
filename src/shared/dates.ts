@@ -15,19 +15,26 @@ export function addDays(date: Date, days: number) {
   return new Date(date.getTime() + days * 86400000);
 }
 export function renewalWindow(
-  durationDays: number,
+  durationMonths: number,
   latestEnd: Date | null,
   now = new Date(),
 ) {
-  if (
-    !Number.isInteger(durationDays) ||
-    durationDays < 1 ||
-    durationDays > 3660
-  )
-    throw new Error("Duración inválida");
+  if (![1, 3, 6].includes(durationMonths)) throw new Error("Duración inválida");
   const today = dayStart(localDate(now));
   const startAt = latestEnd && latestEnd > today ? latestEnd : today;
-  return { startAt, endAt: addDays(startAt, durationDays) };
+  return { startAt, endAt: addCalendarMonths(startAt, durationMonths) };
+}
+// The exclusive end is the same local day in the destination month. If that
+// day does not exist, cover the entire destination month instead.
+export function addCalendarMonths(date: Date, months: number): Date {
+  const [year, month, day] = localDate(date).split("-").map(Number);
+  const lastDay = new Date(
+    Date.UTC(year, month - 1 + months + 1, 0),
+  ).getUTCDate();
+  const target = new Date(
+    Date.UTC(year, month - 1 + months, Math.min(day, lastDay + 1)),
+  );
+  return dayStart(target.toISOString().slice(0, 10));
 }
 export function membershipStatus(
   m: { state: string; startAt: Date; endAt: Date },

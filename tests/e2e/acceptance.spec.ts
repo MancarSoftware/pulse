@@ -44,7 +44,7 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
   let dialog = page.getByRole("dialog");
   await dialog.getByLabel("Nombre", { exact: true }).fill("Machines mensual");
   await dialog.getByLabel("Precio USD").fill("25.00");
-  await dialog.getByLabel("Duración en días").fill("30");
+  await dialog.getByLabel("Duración de la membresía").selectOption("1");
   await dialog
     .getByLabel(/Servicios incluidos/)
     .selectOption({ label: "Machines" });
@@ -66,6 +66,23 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
   dialog = page.getByRole("dialog");
   await dialog.getByLabel("Nombres", { exact: true }).fill("Andrea");
   await dialog.getByLabel("Apellidos").fill("López");
+  await dialog.getByLabel("Teléfono", { exact: true }).fill("09a9");
+  await expect(dialog.getByLabel("Teléfono", { exact: true })).toHaveValue(
+    "099",
+  );
+  await expect(dialog.getByLabel("Teléfono", { exact: true })).toHaveAttribute(
+    "maxlength",
+    "10",
+  );
+  await dialog
+    .getByLabel("Email", { exact: true })
+    .fill("sin-arroba.example.com");
+  expect(
+    await dialog
+      .getByLabel("Email", { exact: true })
+      .evaluate((el) => (el as HTMLInputElement).checkValidity()),
+  ).toBe(false);
+  await dialog.getByLabel("Email", { exact: true }).fill("andrea@example.test");
   await dialog.getByLabel("Teléfono").fill("0990000011");
   await dialog.getByRole("button", { name: "Registrar socio" }).click();
   await expect(page).toHaveURL(/members\//);

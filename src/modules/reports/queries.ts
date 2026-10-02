@@ -50,10 +50,14 @@ export async function lookups(ctx: Context) {
       take: 300,
     }),
     db.plan.findMany({
-      where: { organizationId: ctx.organizationId, active: true },
+      where: {
+        organizationId: ctx.organizationId,
+        active: true,
+        durationMonths: { not: null },
+      },
+      include: { services: { include: { service: true } } },
       orderBy: { name: "asc" },
       take: 300,
-      include: { services: true },
     }),
     db.paymentMethod.findMany({
       where: { organizationId: ctx.organizationId, active: true },

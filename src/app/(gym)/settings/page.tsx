@@ -6,6 +6,7 @@ import { lookups, type Search } from "@/modules/reports/queries";
 import { OperationForm, type Field } from "@/components/operation-form";
 import { Modal } from "@/components/modal";
 import { formatMoney } from "@/shared/money";
+import { durationLabel } from "@/shared/presentation";
 export default async function Settings({
   searchParams,
 }: {
@@ -66,10 +67,14 @@ export default async function Settings({
       nameField,
       { name: "price", label: "Precio USD" },
       {
-        name: "durationDays",
-        label: "Duración en días",
-        type: "number",
-        min: "1",
+        name: "durationMonths",
+        label: "Duración de la membresía",
+        type: "select",
+        options: [1, 3, 6].map((months) => ({
+          value: String(months),
+          label: durationLabel(months),
+        })),
+        hint: "Meses calendario completos; incluye sábados y domingos.",
       },
       { name: "description", label: "Descripción", required: false },
       {
@@ -95,7 +100,9 @@ export default async function Settings({
         </div>
         <p className="muted">
           Los cambios de precio o servicios aplican a nuevos contratos. Las
-          membresías existentes conservan lo contratado.
+          membresías existentes conservan lo contratado. La duración y los
+          servicios incluidos se eligen por separado; el precio es el total del
+          período.
         </p>
         <div className="table-wrap">
           <table>
@@ -112,7 +119,11 @@ export default async function Settings({
               {plans.map((p) => (
                 <tr key={p.id}>
                   <td>{p.name}</td>
-                  <td>{p.durationDays} días</td>
+                  <td>
+                    {p.durationMonths
+                      ? durationLabel(p.durationMonths)
+                      : `Revisar: ${p.durationDays} días (anterior)`}
+                  </td>
                   <td>{formatMoney(p.price)}</td>
                   <td>{p.active ? "Habilitado" : "Deshabilitado"}</td>
                   <td>
@@ -127,8 +138,10 @@ export default async function Settings({
                               ? p.services.map((s) => s.serviceId).join(",")
                               : f.name === "price"
                                 ? p.price.toString()
-                                : f.name === "durationDays"
-                                  ? String(p.durationDays)
+                                : f.name === "durationMonths"
+                                  ? p.durationMonths
+                                    ? String(p.durationMonths)
+                                    : ""
                                   : f.name === "active"
                                     ? String(p.active)
                                     : f.name === "description"

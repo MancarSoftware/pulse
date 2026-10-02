@@ -6,6 +6,7 @@ export type Field = {
   label: string;
   type?:
     | "text"
+    | "tel"
     | "email"
     | "password"
     | "number"
@@ -14,12 +15,15 @@ export type Field = {
     | "select"
     | "multiselect"
     | "checkbox";
-  options?: { value: string; label: string }[];
+  options?: { value: string; label: string; detail?: string }[];
   value?: string;
   required?: boolean;
   min?: string;
   step?: string;
   hint?: string;
+  maxLength?: number;
+  pattern?: string;
+  numericOnly?: boolean;
 };
 export function OperationForm({
   endpoint,
@@ -46,6 +50,7 @@ export function OperationForm({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [key, setKey] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Record<string, string>>({});
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
@@ -126,8 +131,19 @@ export function OperationForm({
             ) : f.type === "select" ? (
               <select
                 aria-labelledby={`${formId}-${f.name}-label`}
+                aria-describedby={
+                  f.hint || f.options?.some((o) => o.detail)
+                    ? `${formId}-${f.name}-hint`
+                    : undefined
+                }
                 name={f.name}
                 defaultValue={f.value ?? ""}
+                onChange={(event) =>
+                  setSelected((values) => ({
+                    ...values,
+                    [f.name]: event.target.value,
+                  }))
+                }
                 required={f.required !== false}
               >
                 <option value="" disabled>
@@ -166,13 +182,34 @@ export function OperationForm({
                 required={f.required !== false}
                 min={f.min}
                 step={f.step}
-                maxLength={f.type === "password" ? 128 : 240}
+                maxLength={f.maxLength ?? (f.type === "password" ? 128 : 240)}
+                pattern={f.pattern}
+                inputMode={f.numericOnly ? "numeric" : undefined}
+                onInput={
+                  f.numericOnly
+                    ? (event) => {
+                        const input = event.currentTarget;
+                        input.value = input.value
+                          .replace(/[^0-9]/g, "")
+                          .slice(0, f.maxLength ?? 240);
+                      }
+                    : undefined
+                }
                 autoComplete={
                   f.type === "password" ? "new-password" : undefined
                 }
               />
             )}
-            {f.hint && <small id={`${formId}-${f.name}-hint`}>{f.hint}</small>}
+            {(f.hint || f.options?.some((o) => o.detail)) && (
+              <small id={`${formId}-${f.name}-hint`} aria-live="polite">
+                {f.hint}{" "}
+                {
+                  f.options?.find(
+                    (o) => o.value === (selected[f.name] ?? f.value),
+                  )?.detail
+                }
+              </small>
+            )}
           </label>
         ))}
       </div>

@@ -49,6 +49,11 @@ export async function renewMembership(ctx: Context, input: unknown) {
         "El precio cambió. Revisa el plan y confirma de nuevo.",
         409,
       );
+    if (plan.durationMonths === null)
+      throw new AppError(
+        "INVALID_PLAN",
+        "Configura una duración de 1, 3 o 6 meses para este plan",
+      );
     if (!plan.services.length || plan.services.some((s) => !s.service.active))
       throw new AppError(
         "INVALID_PLAN",
@@ -77,10 +82,11 @@ export async function renewMembership(ctx: Context, input: unknown) {
         memberId: member.id,
         planId: plan.id,
         planName: plan.name,
+        durationMonths: plan.durationMonths,
         amount: plan.price,
         serviceIds: plan.services.map((s) => s.serviceId),
         serviceNames: plan.services.map((s) => s.service.name),
-        ...renewalWindow(plan.durationDays, latest?.endAt ?? null),
+        ...renewalWindow(plan.durationMonths, latest?.endAt ?? null),
         createdById: ctx.staffId,
       },
     });

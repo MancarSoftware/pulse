@@ -187,7 +187,8 @@ model Plan {
   name String
   description String @default("")
   price Decimal @db.Decimal(14, 2)
-  durationDays Int
+  durationDays Int?
+  durationMonths Int?
   active Boolean @default(true)
   services PlanService[]
   memberships Membership[]
@@ -212,6 +213,7 @@ model Membership {
   planId String
   plan Plan @relation(fields: [organizationId, planId], references: [organizationId, id])
   planName String
+  durationMonths Int?
   serviceIds String[]
   serviceNames String[]
   startAt DateTime @db.Timestamptz(3)

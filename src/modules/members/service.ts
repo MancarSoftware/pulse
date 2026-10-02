@@ -6,14 +6,14 @@ import {
   type Context,
 } from "@/modules/auth/permissions";
 import { audit, branchScope } from "@/modules/transactions/service";
-import { id, name } from "@/shared/schemas";
+import { id, name, phoneNumber, memberEmail } from "@/shared/schemas";
 import { AppError, requireFound } from "@/shared/errors";
 export const memberSchema = z
   .object({
     firstName: name,
     lastName: name,
-    phone: z.string().trim().min(7).max(25),
-    email: z.union([z.email(), z.literal("")]).optional(),
+    phone: phoneNumber,
+    email: memberEmail,
     branchId: id,
     notes: z.string().max(2000).default(""),
     emergencyContact: z.string().max(200).optional(),
