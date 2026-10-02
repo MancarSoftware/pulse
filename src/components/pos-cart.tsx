@@ -2,8 +2,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Icon } from "./icon";
 import { NumericInput } from "./numeric-input";
-type Product = { id: string; name: string; price: string; available: number };
+type Product = {
+  id: string;
+  name: string;
+  price: string;
+  available: number;
+  sku: string;
+  category: string;
+};
 const cents = (value: string) => {
   const [whole, fraction = ""] = value.split(".");
   return BigInt(whole) * 100n + BigInt(fraction.padEnd(2, "0"));
@@ -70,60 +78,78 @@ export function PosCart({
     }
   }
   return (
-    <div className="split">
-      <section className="panel">
-        <h2>Productos disponibles</h2>
+    <div className="pos-workspace">
+      <section className="panel pos-catalog">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">CATÁLOGO DE LA SUCURSAL</p>
+            <h2>Productos disponibles</h2>
+          </div>
+          <span className="status">{products.length} productos</span>
+        </div>
         {products.length ? (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Producto</th>
-                  <th>Precio</th>
-                  <th>Stock</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((p) => (
-                  <tr key={p.id}>
-                    <td>{p.name}</td>
-                    <td>${p.price}</td>
-                    <td>{p.available}</td>
-                    <td>
-                      <button
-                        className="button secondary"
-                        disabled={busy || p.available < 1}
-                        aria-label={`Agregar ${p.name}`}
-                        onClick={() => {
-                          setReceipt("");
-                          setCart((prev) => {
-                            const existing = prev.find(
-                              (l) => l.product.id === p.id,
-                            );
-                            return existing
-                              ? prev.map((l) =>
-                                  l.product.id === p.id
-                                    ? {
-                                        ...l,
-                                        quantity: Math.min(
-                                          l.quantity + 1,
-                                          p.available,
-                                        ),
-                                      }
-                                    : l,
-                                )
-                              : [...prev, { product: p, quantity: 1 }];
-                          });
-                        }}
-                      >
-                        Agregar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="pos-products">
+            {products.map((p) => {
+              const selected =
+                cart.find((line) => line.product.id === p.id)?.quantity ?? 0;
+              return (
+                <article
+                  className={`pos-product ${selected ? "selected" : ""}`}
+                  key={p.id}
+                >
+                  <div className="pos-product-top">
+                    <span className="product-symbol">
+                      <Icon name="inventory" />
+                    </span>
+                    <span
+                      className={`stock-label ${p.available < 1 ? "out" : p.available <= 5 ? "low" : ""}`}
+                    >
+                      {p.available < 1
+                        ? "Sin stock"
+                        : `${p.available} disponibles`}
+                    </span>
+                  </div>
+                  <small className="muted">
+                    {p.category || "Productos"} · {p.sku}
+                  </small>
+                  <h3>{p.name}</h3>
+                  <div className="pos-product-bottom">
+                    <strong>${p.price}</strong>
+                    <button
+                      className="button secondary"
+                      disabled={busy || selected >= p.available}
+                      aria-label={`Agregar ${p.name}`}
+                      onClick={() => {
+                        setReceipt("");
+                        setCart((previous) => {
+                          const existing = previous.find(
+                            (line) => line.product.id === p.id,
+                          );
+                          return existing
+                            ? previous.map((line) =>
+                                line.product.id === p.id
+                                  ? {
+                                      ...line,
+                                      quantity: Math.min(
+                                        line.quantity + 1,
+                                        p.available,
+                                      ),
+                                    }
+                                  : line,
+                              )
+                            : [...previous, { product: p, quantity: 1 }];
+                        });
+                      }}
+                    >
+                      + Agregar
+                    </button>
+                  </div>
+                  {selected > 0 && (
+                    <small className="in-cart">{selected} en esta venta</small>
+                  )}
+                </article>
+              );
+            })}
           </div>
         ) : (
           <div className="empty">
@@ -134,9 +160,16 @@ export function PosCart({
           </div>
         )}
       </section>
-      <section className="panel">
-        <p className="eyebrow">VENTA ACTUAL</p>
-        <h2>Carrito</h2>
+      <section className="panel pos-checkout">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">VENTA ACTUAL</p>
+            <h2>Carrito</h2>
+          </div>
+          <span className="cart-count" aria-live="polite">
+            {cart.reduce((sum, line) => sum + line.quantity, 0)} unidades
+          </span>
+        </div>
         {cart.length ? (
           cart.map((l) => (
             <div className="cart-line" key={l.product.id}>
@@ -144,33 +177,71 @@ export function PosCart({
                 <strong>{l.product.name}</strong>
                 <br />
                 <small>${l.product.price} / unidad</small>
+                <span className="line-subtotal">
+                  {display(cents(l.product.price) * BigInt(l.quantity))}
+                </span>
               </div>
-              <label>
-                <span className="sr-only">Cantidad de {l.product.name}</span>
-                <NumericInput
-                  min={1}
-                  max={l.product.available}
-                  required
-                  value={l.quantity}
-                  disabled={busy}
-                  onChange={(e) =>
-                    setCart((prev) =>
-                      prev.map((v) =>
-                        v.product.id === l.product.id
-                          ? {
-                              ...v,
-                              quantity: Math.min(
-                                l.product.available,
-                                Math.max(1, Number(e.target.value) || 1),
-                              ),
-                            }
-                          : v,
+              <div className="quantity-control">
+                <button
+                  type="button"
+                  disabled={busy || l.quantity <= 1}
+                  aria-label={`Reducir cantidad de ${l.product.name}`}
+                  onClick={() =>
+                    setCart((previous) =>
+                      previous.map((line) =>
+                        line.product.id === l.product.id
+                          ? { ...line, quantity: line.quantity - 1 }
+                          : line,
                       ),
                     )
                   }
-                />
-              </label>
+                >
+                  −
+                </button>
+                <label>
+                  <span className="sr-only">Cantidad de {l.product.name}</span>
+                  <NumericInput
+                    min={1}
+                    max={l.product.available}
+                    required
+                    value={l.quantity}
+                    disabled={busy}
+                    onChange={(e) =>
+                      setCart((prev) =>
+                        prev.map((v) =>
+                          v.product.id === l.product.id
+                            ? {
+                                ...v,
+                                quantity: Math.min(
+                                  l.product.available,
+                                  Math.max(1, Number(e.target.value) || 1),
+                                ),
+                              }
+                            : v,
+                        ),
+                      )
+                    }
+                  />
+                </label>
+                <button
+                  type="button"
+                  disabled={busy || l.quantity >= l.product.available}
+                  aria-label={`Aumentar cantidad de ${l.product.name}`}
+                  onClick={() =>
+                    setCart((previous) =>
+                      previous.map((line) =>
+                        line.product.id === l.product.id
+                          ? { ...line, quantity: line.quantity + 1 }
+                          : line,
+                      ),
+                    )
+                  }
+                >
+                  +
+                </button>
+              </div>
               <button
+                className="cart-remove"
                 disabled={busy}
                 aria-label={`Quitar ${l.product.name}`}
                 onClick={() =>
@@ -184,7 +255,14 @@ export function PosCart({
             </div>
           ))
         ) : (
-          <p className="muted">Agrega productos para iniciar una venta.</p>
+          <div className="pos-empty">
+            <Icon name="pos" />
+            <h3>Prepara tu primera venta</h3>
+            <p className="muted">
+              Agrega productos del catálogo. Aquí podrás revisar cantidades y el
+              importe antes de cobrar.
+            </p>
+          </div>
         )}
         <div className="total">
           <span>Total</span>
@@ -208,7 +286,7 @@ export function PosCart({
           Confirma solo después de recibir el pago.
         </p>
         <button
-          className="button"
+          className="button checkout-submit"
           onClick={sell}
           disabled={busy || !cart.length || !method}
         >

@@ -57,6 +57,21 @@ export function OperationForm({
   const [selected, setSelected] = useState<Record<string, string>>({});
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSuccess("");
+    const selections = new FormData(event.currentTarget);
+    const missing = fields.find(
+      (f) =>
+        f.type === "multiselect" &&
+        f.required !== false &&
+        !selections.getAll(f.name).length,
+    );
+    if (missing) {
+      setError(`Selecciona al menos una opción en ${missing.label}.`);
+      event.currentTarget
+        .querySelector<HTMLInputElement>(`input[name="${missing.name}"]`)
+        ?.focus();
+      return;
+    }
     setBusy(true);
     setError("");
     setSuccess("");
@@ -114,128 +129,146 @@ export function OperationForm({
   return (
     <form onSubmit={submit} className="operation-form">
       <div className="form-grid">
-        {fields.map((f) => (
-          <label key={f.name} className={f.type === "textarea" ? "full" : ""}>
-            <span id={`${formId}-${f.name}-label`}>{f.label}</span>
-            {f.type === "multiselect" ? (
-              <select
-                aria-labelledby={`${formId}-${f.name}-label`}
-                aria-describedby={
-                  f.hint ? `${formId}-${f.name}-hint` : undefined
-                }
-                multiple
-                name={f.name}
-                defaultValue={f.value?.split(",") ?? []}
-                required={f.required !== false}
-              >
+        {fields.map((f) =>
+          f.type === "multiselect" ? (
+            <fieldset
+              key={f.name}
+              className="service-selection full"
+              aria-describedby={f.hint ? `${formId}-${f.name}-hint` : undefined}
+            >
+              <legend>{f.label}</legend>
+              <div className="service-options">
                 {f.options?.map((o) => (
-                  <option value={o.value} key={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            ) : f.type === "select" ? (
-              <select
-                aria-labelledby={`${formId}-${f.name}-label`}
-                aria-describedby={
-                  f.hint || f.options?.some((o) => o.detail)
-                    ? `${formId}-${f.name}-hint`
-                    : undefined
-                }
-                name={f.name}
-                defaultValue={f.value ?? ""}
-                onChange={(event) =>
-                  setSelected((values) => ({
-                    ...values,
-                    [f.name]: event.target.value,
-                  }))
-                }
-                required={f.required !== false}
-              >
-                <option value="" disabled>
-                  Seleccionar…
-                </option>
-                {f.options?.map((o) => (
-                  <option value={o.value} key={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            ) : f.type === "textarea" ? (
-              <textarea
-                aria-labelledby={`${formId}-${f.name}-label`}
-                name={f.name}
-                defaultValue={f.value}
-                rows={3}
-                maxLength={2000}
-              />
-            ) : f.type === "checkbox" ? (
-              <input
-                aria-labelledby={`${formId}-${f.name}-label`}
-                type="checkbox"
-                name={f.name}
-                defaultChecked={f.value !== "false"}
-              />
-            ) : f.type === "number" || f.type === "decimal" ? (
-              <NumericInput
-                aria-labelledby={`${formId}-${f.name}-label`}
-                aria-describedby={
-                  f.hint ? `${formId}-${f.name}-hint` : undefined
-                }
-                name={f.name}
-                defaultValue={f.value}
-                decimal={f.type === "decimal"}
-                signed={f.signed}
-                required={f.required !== false}
-                min={
-                  f.min ??
-                  (f.type === "decimal" ? "0.01" : f.signed ? undefined : "0")
-                }
-                max={f.max}
-                maxLength={f.maxLength ?? (f.type === "decimal" ? 13 : 7)}
-              />
-            ) : (
-              <input
-                aria-labelledby={`${formId}-${f.name}-label`}
-                aria-describedby={
-                  f.hint ? `${formId}-${f.name}-hint` : undefined
-                }
-                type={f.type ?? "text"}
-                name={f.name}
-                defaultValue={f.value}
-                required={f.required !== false}
-                min={f.min}
-                step={f.step}
-                maxLength={f.maxLength ?? (f.type === "password" ? 128 : 240)}
-                pattern={f.pattern}
-                inputMode={f.numericOnly ? "numeric" : undefined}
-                onInput={
-                  f.numericOnly
-                    ? (event) => {
-                        const input = event.currentTarget;
-                        input.value = input.value
-                          .replace(/[^0-9]/g, "")
-                          .slice(0, f.maxLength ?? 240);
+                  <label className="service-option" key={o.value}>
+                    <input
+                      type="checkbox"
+                      name={f.name}
+                      value={o.value}
+                      defaultChecked={
+                        f.value?.split(",").includes(o.value) ?? false
                       }
-                    : undefined
-                }
-                autoComplete={
-                  f.type === "password" ? "new-password" : undefined
-                }
-              />
-            )}
-            {(f.hint || f.options?.some((o) => o.detail)) && (
-              <small id={`${formId}-${f.name}-hint`} aria-live="polite">
-                {f.hint}{" "}
-                {
-                  f.options?.find(
-                    (o) => o.value === (selected[f.name] ?? f.value),
-                  )?.detail
-                }
-              </small>
-            )}
-          </label>
-        ))}
+                    />
+                    <span>{o.label}</span>
+                  </label>
+                ))}
+              </div>
+              {!f.options?.length && (
+                <p className="muted">
+                  Agrega un servicio en Configuración antes de crear un plan.
+                </p>
+              )}
+              {f.hint && (
+                <small id={`${formId}-${f.name}-hint`}>
+                  {f.hint} Marca cada servicio que quieres incluir.
+                </small>
+              )}
+            </fieldset>
+          ) : (
+            <label key={f.name} className={f.type === "textarea" ? "full" : ""}>
+              <span id={`${formId}-${f.name}-label`}>{f.label}</span>
+              {f.type === "select" ? (
+                <select
+                  aria-labelledby={`${formId}-${f.name}-label`}
+                  aria-describedby={
+                    f.hint || f.options?.some((o) => o.detail)
+                      ? `${formId}-${f.name}-hint`
+                      : undefined
+                  }
+                  name={f.name}
+                  defaultValue={f.value ?? ""}
+                  onChange={(event) =>
+                    setSelected((values) => ({
+                      ...values,
+                      [f.name]: event.target.value,
+                    }))
+                  }
+                  required={f.required !== false}
+                >
+                  <option value="" disabled>
+                    Seleccionar…
+                  </option>
+                  {f.options?.map((o) => (
+                    <option value={o.value} key={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              ) : f.type === "textarea" ? (
+                <textarea
+                  aria-labelledby={`${formId}-${f.name}-label`}
+                  name={f.name}
+                  defaultValue={f.value}
+                  rows={3}
+                  maxLength={2000}
+                />
+              ) : f.type === "checkbox" ? (
+                <input
+                  aria-labelledby={`${formId}-${f.name}-label`}
+                  type="checkbox"
+                  name={f.name}
+                  defaultChecked={f.value !== "false"}
+                />
+              ) : f.type === "number" || f.type === "decimal" ? (
+                <NumericInput
+                  aria-labelledby={`${formId}-${f.name}-label`}
+                  aria-describedby={
+                    f.hint ? `${formId}-${f.name}-hint` : undefined
+                  }
+                  name={f.name}
+                  defaultValue={f.value}
+                  decimal={f.type === "decimal"}
+                  signed={f.signed}
+                  required={f.required !== false}
+                  min={
+                    f.min ??
+                    (f.type === "decimal" ? "0.01" : f.signed ? undefined : "0")
+                  }
+                  max={f.max}
+                  maxLength={f.maxLength ?? (f.type === "decimal" ? 13 : 7)}
+                />
+              ) : (
+                <input
+                  aria-labelledby={`${formId}-${f.name}-label`}
+                  aria-describedby={
+                    f.hint ? `${formId}-${f.name}-hint` : undefined
+                  }
+                  type={f.type ?? "text"}
+                  name={f.name}
+                  defaultValue={f.value}
+                  required={f.required !== false}
+                  min={f.min}
+                  step={f.step}
+                  maxLength={f.maxLength ?? (f.type === "password" ? 128 : 240)}
+                  pattern={f.pattern}
+                  inputMode={f.numericOnly ? "numeric" : undefined}
+                  onInput={
+                    f.numericOnly
+                      ? (event) => {
+                          const input = event.currentTarget;
+                          input.value = input.value
+                            .replace(/[^0-9]/g, "")
+                            .slice(0, f.maxLength ?? 240);
+                        }
+                      : undefined
+                  }
+                  autoComplete={
+                    f.type === "password" ? "new-password" : undefined
+                  }
+                />
+              )}
+              {(f.hint || f.options?.some((o) => o.detail)) && (
+                <small id={`${formId}-${f.name}-hint`} aria-live="polite">
+                  {f.hint}{" "}
+                  {
+                    f.options?.find(
+                      (o) => o.value === (selected[f.name] ?? f.value),
+                    )?.detail
+                  }
+                </small>
+              )}
+            </label>
+          ),
+        )}
       </div>
       {children}
       {error && (

@@ -22,7 +22,7 @@ export function queryScope(ctx: Context, search: Search = {}) {
     ...(branchId ? { branchId } : {}),
   };
 }
-export function pagination(search: Search) {
+export function pagination(search: Search, pageSize = 25) {
   const page = z.coerce
     .number()
     .int()
@@ -30,7 +30,7 @@ export function pagination(search: Search) {
     .max(10000)
     .catch(1)
     .parse(search.page);
-  return { page, skip: (page - 1) * 25, take: 25 };
+  return { page, skip: (page - 1) * pageSize, take: pageSize };
 }
 export async function lookups(ctx: Context) {
   const scope = queryScope(ctx);
@@ -76,7 +76,7 @@ export async function listMembers(ctx: Context, search: Search) {
   authorize(ctx, "members:read");
   const now = new Date();
   const today = dayStart(localDate(now));
-  const { skip, take, page } = pagination(search);
+  const { skip, take, page } = pagination(search, 12);
   const q = typeof search.q === "string" ? search.q.trim().slice(0, 100) : "";
   const where: Prisma.MemberWhereInput = {
     ...queryScope(ctx, search),
@@ -192,7 +192,7 @@ export async function financialReport(ctx: Context, search: Search) {
   authorize(ctx, "reports:read");
   const scope = queryScope(ctx, search);
   const window = reportWindow(search);
-  const { skip, take, page } = pagination(search);
+  const { skip, take, page } = pagination(search, 12);
   const where = { ...scope, occurredAt: { gte: window.from, lt: window.to } };
   const periodFormat =
     search.group === "month"

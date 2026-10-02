@@ -511,3 +511,44 @@ describe("catalog deletion", () => {
     ).rejects.toMatchObject({ code: "ACTIVE_BRANCH" });
   });
 });
+
+it("paginates members and transactions in 12-record pages without changing report totals", async () => {
+  const { listMembers } = await import("@/modules/reports/queries");
+  const f = await fixture();
+  for (let i = 0; i < 12; i++) {
+    await saveMember(f.ctx, {
+      firstName: `Socio ${i}`,
+      lastName: `Apellido ${i}`,
+      phone: "0990000000",
+      branchId: f.ctx.branchId,
+    });
+    await sellDayPass(f.ctx, {
+      ...payment(f),
+      serviceId: f.service.id,
+      amount: "2.00",
+    });
+  }
+  await sellDayPass(f.ctx, {
+    ...payment(f),
+    serviceId: f.service.id,
+    amount: "2.00",
+  });
+  const members1 = await listMembers(f.ctx, {}),
+    members2 = await listMembers(f.ctx, { page: "2" });
+  expect(members1.total).toBe(13);
+  expect(members1.rows).toHaveLength(12);
+  expect(members2.rows).toHaveLength(1);
+  expect(
+    new Set([...members1.rows, ...members2.rows].map((row) => row.id)).size,
+  ).toBe(13);
+  const report1 = await financialReport(f.ctx, {}),
+    report2 = await financialReport(f.ctx, { page: "2" });
+  expect(report1.count).toBe(13);
+  expect(report1.entries).toHaveLength(12);
+  expect(report2.entries).toHaveLength(1);
+  expect(
+    new Set([...report1.entries, ...report2.entries].map((row) => row.id)).size,
+  ).toBe(13);
+  expect(report1.sources[0]._sum.amount?.toString()).toBe("26");
+  expect(report2.sources[0]._sum.amount?.toString()).toBe("26");
+});

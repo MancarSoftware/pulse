@@ -291,6 +291,7 @@ export default async function Reports({
           </table>
         </div>
         <Pagination
+          pageSize={12}
           page={report.page}
           total={report.count}
           search={search}

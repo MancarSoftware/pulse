@@ -95,3 +95,40 @@ it("rejects invalid numeric input and normalizes decimal money", async () => {
     price: "12.50",
   });
 });
+
+it("selects several services independently and prevents an empty plan selection", async () => {
+  const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
+  vi.stubGlobal("fetch", fetch);
+  render(
+    <OperationForm
+      endpoint="/test"
+      fields={[
+        {
+          name: "serviceIds",
+          label: "Servicios incluidos",
+          type: "multiselect",
+          value: "machines",
+          options: [
+            { value: "machines", label: "Máquinas" },
+            { value: "dance", label: "Baile" },
+          ],
+        },
+      ]}
+    />,
+  );
+  expect(screen.getByRole("checkbox", { name: "Máquinas" })).toBeChecked();
+  fireEvent.click(screen.getByRole("checkbox", { name: "Baile" }));
+  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+  expect(JSON.parse(fetch.mock.calls[0][1].body).serviceIds).toEqual([
+    "machines",
+    "dance",
+  ]);
+  fireEvent.click(screen.getByRole("checkbox", { name: "Máquinas" }));
+  fireEvent.click(screen.getByRole("checkbox", { name: "Baile" }));
+  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Selecciona al menos una opción",
+  );
+  expect(fetch).toHaveBeenCalledTimes(1);
+});

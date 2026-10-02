@@ -65,9 +65,7 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
   await dialog.getByLabel("Nombre", { exact: true }).fill("Machines mensual");
   await dialog.getByLabel("Precio USD").fill("25.00");
   await dialog.getByLabel("Duración de la membresía").selectOption("1");
-  await dialog
-    .getByLabel(/Servicios incluidos/)
-    .selectOption({ label: "Machines" });
+  await dialog.getByRole("checkbox", { name: "Machines", exact: true }).check();
   await saveDialog(page);
   await page.goto("/settings?tab=staff");
   await page.getByRole("button", { name: "Nuevo empleado" }).click();

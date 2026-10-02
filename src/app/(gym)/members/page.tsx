@@ -173,6 +173,7 @@ export default async function Members({
           </div>
         )}
         <Pagination
+          pageSize={12}
           page={list.page}
           total={list.total}
           search={search}

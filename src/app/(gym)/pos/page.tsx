@@ -84,6 +84,8 @@ export default async function Pos({
         products={products.map((p) => ({
           id: p.id,
           name: p.name,
+          sku: p.sku,
+          category: p.category,
           price: p.price.toFixed(2),
           available: p.inventories[0]?.quantity ?? 0,
         }))}

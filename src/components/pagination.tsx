@@ -5,11 +5,13 @@ export function Pagination({
   total,
   search,
   path,
+  pageSize = 25,
 }: {
   page: number;
   total: number;
   search: Search;
   path: string;
+  pageSize?: number;
 }) {
   function href(next: number) {
     const params = new URLSearchParams();
@@ -22,11 +24,13 @@ export function Pagination({
     <div className="pagination">
       <span className="muted">
         {total} registros · Página {page} de{" "}
-        {Math.max(1, Math.ceil(total / 25))}
+        {Math.max(1, Math.ceil(total / pageSize))}
       </span>
       <div className="inline">
         {page > 1 && <Link href={href(page - 1)}>← Anterior</Link>}
-        {page * 25 < total && <Link href={href(page + 1)}>Siguiente →</Link>}
+        {page * pageSize < total && (
+          <Link href={href(page + 1)}>Siguiente →</Link>
+        )}
       </div>
     </div>
   );
