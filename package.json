@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "next dev",
+    "dev:mobile": "node --env-file=.env scripts/mobile-preview.mjs",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint . --max-warnings=0",

@@ -23,6 +23,8 @@ Abrir http://localhost:3000, crear la cuenta del propietario y completar organiz
 
 ## Entorno
 
+Para revisar desde el teléfono, conecta ambos dispositivos al mismo Wi-Fi y ejecuta `npm run dev:mobile`. Abre la dirección que imprime la terminal y mantenla abierta. El comando detecta la IPv4 local, usa el puerto 3001 y configura el origen de autenticación sin modificar `.env`. No usa el Wi-Fi de invitados. La vista HTTP local no permite usar la cámara QR en algunos navegadores móviles; para ese flujo se necesita HTTPS.
+
 `.env.example` contiene únicamente placeholders. Nunca agregar archivos `.env*` reales, respaldos, dumps o claves a Git. No hay secretos públicos `NEXT_PUBLIC_*`.
 
 | Variable                                | Uso                                                                              |
