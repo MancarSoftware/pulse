@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AppError } from "@/shared/errors";
+import { applicationUrl } from "@/infrastructure/env";
 
 const platformSchema = z.object({
   appId: z.string().regex(/^\d+$/),
@@ -22,7 +23,7 @@ export function whatsappPlatform() {
     welcomeTemplate: process.env.WHATSAPP_WELCOME_TEMPLATE,
     renewalTemplate: process.env.WHATSAPP_RENEWAL_TEMPLATE,
     language: process.env.WHATSAPP_TEMPLATE_LANGUAGE ?? "es",
-    siteUrl: process.env.BETTER_AUTH_URL,
+    siteUrl: applicationUrl(),
   });
   return result.success ? result.data : null;
 }

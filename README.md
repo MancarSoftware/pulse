@@ -101,6 +101,8 @@ Playwright inicia el build de producción con `.env.test` en el puerto 3000; ese
 
 ## Despliegue
 
+Para acceder desde el teléfono con HTTPS público, ver [despliegue en Render](docs/deployment-render.md). El repositorio incluye `render.yaml`, origen de autenticación automático para Render y una comprobación previa de configuración. Preparar estos archivos no publica la aplicación: se requiere una cuenta de hosting y revisar el costo antes de crear recursos.
+
 1. Preparar PostgreSQL administrado o dedicado, un rol de migración y un rol de aplicación separado sin DDL/TRUNCATE; configurar TLS.
 2. Configurar secretos en el proveedor, HTTPS/origen canónico y un bucket privado si se necesitan fotografías.
 3. `npm ci`, `npm run db:generate`, ejecutar controles, `npm run build`.

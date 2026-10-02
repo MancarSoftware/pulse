@@ -1,0 +1,35 @@
+# Paid resources: review Render's total before creating this Blueprint.
+# No local database, .env files, demo data or uploads are copied to the cloud.
+services:
+  - type: web
+    name: mancar-gym
+    runtime: node
+    region: virginia
+    plan: 0.5c-512mb
+    autoDeployTrigger: off
+    buildCommand: npm ci --include=dev && npm run deploy:check && npm run build
+    preDeployCommand: npm run db:deploy
+    startCommand: npm run start -- --hostname 0.0.0.0
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mancar-db
+          property: connectionString
+      - key: BETTER_AUTH_SECRET
+        generateValue: true
+      - key: ALLOW_DEMO_SEED
+        value: "false"
+databases:
+  - name: mancar-db
+    region: virginia
+    plan: 0.1c-256mb
+    diskSizeGB: 1
+    postgresMajorVersion: "18"
+    databaseName: mancar
+    user: mancar_migration
+    ipAllowList: []
