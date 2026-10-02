@@ -14,7 +14,7 @@ import { formatDate, membershipStatus, renewalWindow } from "@/shared/dates";
 import { formatMoney } from "@/shared/money";
 import { AppError } from "@/shared/errors";
 import { membershipLabels, durationLabel } from "@/shared/presentation";
-import { whatsAppConfig } from "@/modules/notifications/whatsapp-provider";
+import { resolveWhatsAppConfig } from "@/modules/notifications/whatsapp-connect";
 import { ecuadorWhatsAppPhone } from "@/modules/notifications/whatsapp-content";
 export default async function MemberProfile({
   params,
@@ -42,7 +42,7 @@ export default async function MemberProfile({
     margin: 2,
   });
   const latest = member.memberships.find((m) => m.state !== "CANCELLED");
-  const whatsappReady = whatsAppConfig()?.organizationId === ctx.organizationId;
+  const whatsappReady = !!(await resolveWhatsAppConfig(ctx.organizationId));
   const notificationLabels = {
     PENDING: "Pendiente",
     PROCESSING: "Procesando",

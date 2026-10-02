@@ -9,7 +9,11 @@ import { formatMoney } from "@/shared/money";
 import { durationLabel } from "@/shared/presentation";
 import { DeleteAction } from "@/components/delete-action";
 import { Icon, type IconName } from "@/components/icon";
-import { whatsAppConfig } from "@/modules/notifications/whatsapp-provider";
+import {
+  whatsappPublicStatus,
+  resolveWhatsAppConfig,
+} from "@/modules/notifications/whatsapp-connect";
+import { WhatsAppConnect } from "@/components/whatsapp-connect";
 export default async function Settings({
   searchParams,
 }: {
@@ -29,7 +33,8 @@ export default async function Settings({
   };
   let content: React.ReactNode;
   if (tab === "whatsapp") {
-    const configured = whatsAppConfig()?.organizationId === ctx.organizationId;
+    const configured = !!(await resolveWhatsAppConfig(ctx.organizationId));
+    const whatsapp = await whatsappPublicStatus(ctx.organizationId);
     const pending = await db.whatsAppMessage.count({
       where: { organizationId: ctx.organizationId, status: "PENDING" },
     });
@@ -37,11 +42,13 @@ export default async function Settings({
       <>
         <p className="eyebrow">COMUNICACIÓN CON SOCIOS</p>
         <h2>WhatsApp y QR de acceso</h2>
-        <p className={`notice ${configured ? "success" : "warning"}`}>
-          {configured
-            ? "Credenciales configuradas. Mantén el procesador de mensajes activo."
-            : "Pendiente de conectar WhatsApp Business Platform con Meta."}
-        </p>
+        <WhatsAppConnect {...whatsapp} owner={ctx.role === "OWNER"} />
+        {configured && !whatsapp.connection && (
+          <p className="notice success">
+            Emisor configurado manualmente en el servidor. La conexión guiada
+            está disponible cuando se habilite Meta.
+          </p>
+        )}
         <p className="muted">
           Al registrar el primer pago se prepara una bienvenida con el QR; los
           siguientes pagos generan una confirmación de renovación. Cada mensaje
@@ -52,18 +59,6 @@ export default async function Settings({
           autorización y celular válido. Un fallo de envío no afecta el pago ni
           su acceso.
         </p>
-        <h3>Para activarlo</h3>
-        <ol className="whatsapp-setup">
-          <li>Configura un número en WhatsApp Business Platform.</li>
-          <li>
-            Aprueba las plantillas de bienvenida y renovación con una imagen QR.
-          </li>
-          <li>
-            Configura la conexión y activa el procesador de mensajes en el
-            servidor.
-          </li>
-          <li>Registra la autorización del socio antes de cobrar.</li>
-        </ol>
         <p className="muted">
           El QR permite un ingreso diario mientras la membresía esté vigente. No
           se envía un nuevo código cada día.

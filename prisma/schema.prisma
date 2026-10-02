@@ -103,6 +103,31 @@ model Organization {
   paymentMethods PaymentMethod[]
   expenseCategories ExpenseCategory[]
   products Product[]
+  whatsappConnection WhatsAppConnection?
+  whatsappSignup WhatsAppSignup?
+}
+model WhatsAppConnection {
+  organizationId String @id
+  organization Organization @relation(fields: [organizationId], references: [id])
+  phoneNumberId String @unique
+  wabaId String
+  displayPhone String
+  tokenCiphertext String
+  configurationFingerprint String
+  ready Boolean @default(false)
+  registered Boolean @default(false)
+  setupMessage String
+  checkedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model WhatsAppSignup {
+  organizationId String @id
+  organization Organization @relation(fields: [organizationId], references: [id])
+  userId String
+  nonceHash String
+  expiresAt DateTime
+  consumed Boolean @default(false)
 }
 model Branch {
   id String @id @default(cuid())

@@ -2,11 +2,7 @@ import { setTimeout } from "node:timers/promises";
 import { db } from "../src/infrastructure/db";
 import { whatsAppConfig } from "../src/modules/notifications/whatsapp-provider";
 import { dispatchWhatsApp } from "../src/modules/notifications/whatsapp-delivery";
-const config = whatsAppConfig();
-if (!config) {
-  console.error("WhatsApp no configurado. Consulta docs/whatsapp.md.");
-  process.exit(1);
-}
+import { resolveWhatsAppConfig } from "../src/modules/notifications/whatsapp-connect";
 let stopped = false;
 process.on("SIGINT", () => {
   stopped = true;
@@ -20,9 +16,24 @@ console.log(
 try {
   do {
     try {
-      const result = await dispatchWhatsApp(config);
-      if (result.processed)
-        console.log(`Notificaciones procesadas: ${result.processed}`);
+      const rows = await db.whatsAppConnection.findMany({
+        where: { ready: true },
+        select: { organizationId: true },
+      });
+      const legacy = whatsAppConfig();
+      const ids = new Set(rows.map((r) => r.organizationId));
+      if (legacy) ids.add(legacy.organizationId);
+      for (const id of ids) {
+        try {
+          const result = await dispatchWhatsApp(
+            await resolveWhatsAppConfig(id),
+          );
+          if (result.processed)
+            console.log(`Notificaciones procesadas: ${result.processed}`);
+        } catch {
+          console.error("No se pudo procesar una conexión; se reintentará.");
+        }
+      }
     } catch {
       console.error("No se pudo procesar la cola de WhatsApp; se reintentará.");
     }

@@ -64,6 +64,23 @@ test("owner creates organization, opens protected data and logs out", async ({
     data: { kind: "service", name: "CSRF attempt" },
   });
   expect(csrf.status()).toBe(403);
+  await page.goto("/settings?tab=whatsapp");
+  await expect(
+    page.getByRole("button", { name: "Conectar WhatsApp" }),
+  ).toBeDisabled();
+  await expect(
+    page.getByText(/administrador del sistema debe completar/),
+  ).toBeVisible();
+  const blockedConnect = await page.request.post("/api/gym/whatsapp-connect", {
+    headers: { origin: "https://untrusted.example" },
+    data: { action: "begin" },
+  });
+  expect(blockedConnect.status()).toBe(403);
+  const unconfigured = await page.request.post("/api/gym/whatsapp-connect", {
+    headers: { origin: "http://localhost:3000" },
+    data: { action: "begin" },
+  });
+  expect(unconfigured.status()).toBe(409);
   await page.getByRole("button", { name: "Cerrar sesión" }).click();
   await expect(page).toHaveURL(/login/);
   const denied = await page.request.post("/api/gym/catalog", {

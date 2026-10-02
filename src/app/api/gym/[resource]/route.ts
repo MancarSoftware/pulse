@@ -16,12 +16,16 @@ import { deleteCatalog } from "@/modules/organizations/deletion";
 import { after } from "next/server";
 import { dispatchWhatsApp } from "@/modules/notifications/whatsapp-delivery";
 import { retryWhatsApp } from "@/modules/notifications/whatsapp-retry";
-import { whatsAppConfig } from "@/modules/notifications/whatsapp-provider";
+import {
+  beginWhatsAppSignup,
+  finishWhatsAppSignup,
+  refreshWhatsAppConnection,
+  resolveWhatsAppConfig,
+} from "@/modules/notifications/whatsapp-connect";
 function scheduleWhatsApp(organizationId: string) {
-  const config = whatsAppConfig();
-  if (config?.organizationId !== organizationId) return;
   after(async () => {
     try {
+      const config = await resolveWhatsAppConfig(organizationId);
       await dispatchWhatsApp(config);
     } catch {
       /* Worker recovers durable pending jobs. */
@@ -52,6 +56,29 @@ export async function POST(
     const body = await readBody(request);
     const { resource } = await params;
     switch (resource) {
+      case "whatsapp-connect": {
+        const action =
+          typeof body === "object" && body !== null && "action" in body
+            ? body.action
+            : null;
+        if (action === "begin")
+          return Response.json(await beginWhatsAppSignup(ctx));
+        if (action === "finish") {
+          const result = await finishWhatsAppSignup(ctx, body);
+          if (result.ready) scheduleWhatsApp(ctx.organizationId);
+          return Response.json(result);
+        }
+        if (action === "refresh") {
+          const result = await refreshWhatsAppConnection(ctx);
+          if (result.ready) scheduleWhatsApp(ctx.organizationId);
+          return Response.json(result);
+        }
+        throw new AppError(
+          "VALIDATION",
+          "Acción de conexión no disponible",
+          422,
+        );
+      }
       case "members":
         return Response.json(await saveMember(ctx, body));
       case "whatsapp-retry": {

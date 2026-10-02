@@ -1,6 +1,7 @@
 import type { SVGProps } from "react";
 
 const paths = {
+  phone: "M7 2h10v20H7z M10 18h4",
   trash: "M3 6h18 M9 6V3h6v3 M5 6l1 15h12l1-15 M10 10v7 M14 10v7",
   dashboard: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
   members:
