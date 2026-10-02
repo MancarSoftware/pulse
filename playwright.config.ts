@@ -8,6 +8,7 @@ if (
   throw new Error("E2E requires a dedicated _test database");
 export default defineConfig({
   testDir: "./tests/e2e",
+  globalSetup: "./tests/e2e/global-setup.ts",
   fullyParallel: false,
   workers: 1,
   timeout: 120000,

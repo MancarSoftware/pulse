@@ -199,7 +199,8 @@ export function OperationForm({
                   name={f.name}
                   defaultValue={f.value}
                   rows={3}
-                  maxLength={2000}
+                  maxLength={f.maxLength ?? 2000}
+                  required={f.required === true}
                 />
               ) : f.type === "checkbox" ? (
                 <input
@@ -207,6 +208,7 @@ export function OperationForm({
                   type="checkbox"
                   name={f.name}
                   defaultChecked={f.value !== "false"}
+                  required={f.required === true}
                 />
               ) : f.type === "number" || f.type === "decimal" ? (
                 <NumericInput

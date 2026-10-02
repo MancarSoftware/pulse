@@ -42,6 +42,7 @@ model User {
   sessions Session[]
   accounts Account[]
   staff Staff?
+  platformAdmin PlatformAdmin?
 }
 model Session {
   id String @id
@@ -105,6 +106,82 @@ model Organization {
   products Product[]
   whatsappConnection WhatsAppConnection?
   whatsappSignup WhatsAppSignup?
+  subscription SaaSSubscription?
+  subscriptionPayments SaaSPayment[]
+}
+model PlatformAdmin {
+  userId String @id
+  user User @relation(fields: [userId], references: [id])
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+}
+model PlatformAudit {
+  id String @id @default(cuid())
+  actorUserId String
+  action String
+  entityId String
+  detail Json
+  createdAt DateTime @default(now())
+  @@index([createdAt])
+}
+model SaaSBillingSettings {
+  id String @id @default("main")
+  trialDays Int @default(0)
+  graceDays Int @default(3)
+  paymentInstructions String @default("")
+  updatedAt DateTime @updatedAt
+}
+model SaaSPlan {
+  id String @id @default(cuid())
+  name String
+  price Decimal @db.Decimal(12, 2)
+  durationMonths Int
+  active Boolean @default(false)
+  createdAt DateTime @default(now())
+  subscriptions SaaSSubscription[]
+  payments SaaSPayment[]
+}
+model SaaSSubscription {
+  organizationId String @id
+  organization Organization @relation(fields: [organizationId], references: [id])
+  trialEndsAt DateTime
+  paidUntil DateTime?
+  planId String?
+  plan SaaSPlan? @relation(fields: [planId], references: [id])
+  graceDays Int @default(3)
+  updatedAt DateTime @updatedAt
+}
+enum SaaSPaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+model SaaSPayment {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id])
+  planId String
+  plan SaaSPlan @relation(fields: [planId], references: [id])
+  planName String
+  amount Decimal @db.Decimal(12, 2)
+  durationMonths Int
+  method String
+  reference String
+  notes String @default("")
+  idempotencyKey String
+  requestHash String
+  status SaaSPaymentStatus @default(PENDING)
+  submittedBy String
+  reviewedBy String?
+  reviewedAt DateTime?
+  reviewNote String?
+  verifiedReference String? @unique
+  periodStart DateTime?
+  periodEnd DateTime?
+  createdAt DateTime @default(now())
+  @@unique([organizationId, idempotencyKey])
+  @@index([status, createdAt])
+  @@index([organizationId, createdAt])
 }
 model WhatsAppConnection {
   organizationId String @id

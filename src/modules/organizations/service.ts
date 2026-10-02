@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { serializable } from "@/infrastructure/db";
 import { AppError } from "@/shared/errors";
+import { addDays, dayStart, localDate } from "@/shared/dates";
 export const setupSchema = z
   .object({
     name: z.string().trim().min(2).max(100),
@@ -19,6 +20,18 @@ export async function setupOrganization(userId: string, input: unknown) {
       );
     const organization = await tx.organization.create({
       data: { name: data.name },
+    });
+    const billing = await tx.saaSBillingSettings.findUniqueOrThrow({
+      where: { id: "main" },
+    });
+    await tx.saaSSubscription.create({
+      data: {
+        organizationId: organization.id,
+        trialEndsAt: billing.trialDays
+          ? addDays(dayStart(localDate()), billing.trialDays)
+          : new Date(),
+        graceDays: billing.graceDays,
+      },
     });
     const branch = await tx.branch.create({
       data: {

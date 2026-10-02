@@ -2180,3 +2180,128 @@ summary {
     width: 100%;
   }
 }
+.billing-shell {
+  min-height: 100vh;
+  background: var(--paper);
+}
+.billing-header {
+  padding: 22px max(24px, calc((100vw - 1240px) / 2));
+  background: var(--ink);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.billing-header nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 24px;
+}
+.billing-header nav a {
+  color: #eef8f5;
+  font-size: 0.9rem;
+}
+.billing-shell > main {
+  width: min(1240px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 40px 0;
+}
+.billing-shell > footer {
+  text-align: center;
+  padding: 24px;
+}
+.billing-shell .panel {
+  margin-bottom: 24px;
+}
+.billing-summary {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 32px;
+  border-left: 5px solid var(--accent);
+}
+.billing-summary h2 {
+  margin: 16px 0 8px;
+}
+.billing-suspended {
+  border-left-color: var(--danger);
+}
+.billing-policy {
+  display: grid;
+  align-content: center;
+  gap: 12px;
+  border-left: 1px solid var(--line);
+  padding-left: 24px;
+  font-size: 0.9rem;
+}
+.billing-policy span {
+  color: var(--muted);
+}
+.billing-instructions {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.8;
+}
+.billing-plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 24px;
+}
+.billing-price {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 16px 0;
+}
+.billing-price small {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+.billing-reference {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 6px;
+  max-width: 300px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.billing-review-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.billing-filter {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+}
+.billing-filter label {
+  display: grid;
+  gap: 6px;
+}
+@media (max-width: 640px) {
+  .billing-header {
+    padding: 20px;
+  }
+  .billing-header nav {
+    gap: 16px;
+  }
+  .billing-shell > main {
+    width: calc(100% - 32px);
+    padding: 28px 0;
+  }
+  .billing-summary {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .billing-policy {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding: 16px 0 0;
+  }
+  .billing-filter {
+    flex-wrap: wrap;
+  }
+}

@@ -29,7 +29,16 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
   await page.getByLabel("Nombre del gimnasio").fill("MANCAR Fitness Test");
   await page.getByLabel("Primera sucursal").fill("Quito Centro");
   await page.getByRole("button", { name: "Crear mi organización" }).click();
-  await expect(page).toHaveURL(/dashboard/);
+  await expect(page).toHaveURL(/subscription/);
+  const testOwner = await db.user.findUniqueOrThrow({
+    where: { email },
+    include: { staff: true },
+  });
+  await db.saaSSubscription.update({
+    where: { organizationId: testOwner.staff!.organizationId },
+    data: { paidUntil: addDays(new Date(), 30) },
+  });
+  await page.goto("/dashboard");
   await page.goto("/settings");
   for (const name of ["Machines", "CrossFit", "Dance"]) {
     await page.getByRole("button", { name: "Agregar", exact: true }).click();
@@ -151,12 +160,10 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
     })
     .check();
   await reviewDialog.getByRole("button", { name: "Confirmar reenvío" }).click();
-  await expect(reviewDialog.getByRole("status")).toContainText(
-    "Mensaje en cola",
-  );
-  await reviewDialog
-    .getByRole("button", { name: "Cerrar", exact: true })
-    .click();
+  await expect(
+    page.getByRole("button", { name: "Revisar envío", exact: true }),
+  ).toHaveCount(0);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.goto("/check-in?q=Andrea");
   const result = page.locator("section").filter({
     has: page.getByRole("heading", { name: "Resultado de búsqueda" }),
@@ -253,11 +260,10 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
   });
   const other = await browser.newContext();
   const otherPage = await other.newPage();
+  const otherEmail = `other-${crypto.randomUUID()}@example.test`;
   await otherPage.goto("/register");
   await otherPage.getByLabel("Nombre completo").fill("Otro propietario");
-  await otherPage
-    .getByLabel("Correo electrónico")
-    .fill(`other-${crypto.randomUUID()}@example.test`);
+  await otherPage.getByLabel("Correo electrónico").fill(otherEmail);
   await otherPage.getByLabel("Contraseña", { exact: true }).fill(password);
   await otherPage
     .getByRole("button", { name: "Crear cuenta de propietario" })
@@ -268,7 +274,16 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
   await otherPage
     .getByRole("button", { name: "Crear mi organización" })
     .click();
-  await expect(otherPage).toHaveURL(/dashboard/);
+  await expect(otherPage).toHaveURL(/subscription/);
+  const otherOwner = await db.user.findUniqueOrThrow({
+    where: { email: otherEmail },
+    include: { staff: true },
+  });
+  await db.saaSSubscription.update({
+    where: { organizationId: otherOwner.staff!.organizationId },
+    data: { paidUntil: addDays(new Date(), 30) },
+  });
+  await otherPage.goto("/dashboard");
   const otherBranch = await otherPage
     .locator('select[name="branch"] option')
     .nth(1)

@@ -26,6 +26,10 @@ async function fixture() {
     branchName: "Central",
   });
   const staff = await db.staff.findUniqueOrThrow({ where: { userId } });
+  await db.saaSSubscription.update({
+    where: { organizationId: staff.organizationId },
+    data: { paidUntil: addDays(new Date(), 30) },
+  });
   const ctx: Context = {
     userId,
     staffId: staff.id,

@@ -1,5 +1,7 @@
 # MANCAR Gym
 
+Las suscripciones de gimnasios a la plataforma se administran por separado de las membresías de socios. Consulta [facturación SaaS](docs/saas-billing.md) para publicar precios, verificar pagos manuales y administrar suspensión y renovación sin eliminar datos.
+
 Aplicación multiempresa para gimnasios en Ecuador: socios, planes configurables, membresías, cobros, recepción QR, pases diarios, POS, inventario, gastos y reportes. USD y recibos internos; **no incluye facturación fiscal ni procesamiento de tarjetas**. Los pagos registran cobros que el empleado ya recibió.
 
 ## Requisitos e instalación

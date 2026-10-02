@@ -1,5 +1,6 @@
 import { db, serializable } from "@/infrastructure/db";
 import { ecuadorWhatsAppPhone, membershipMessage } from "./whatsapp-content";
+import { subscriptionAccess } from "@/modules/billing/access";
 import {
   MetaWhatsAppProvider,
   whatsAppConfig,
@@ -14,6 +15,8 @@ export async function dispatchWhatsApp(
   limit = 10,
 ) {
   if (!config) return { configured: false, processed: 0 };
+  if (!(await subscriptionAccess(config.organizationId)).allowed)
+    return { configured: true, processed: 0, paused: true };
   const sender = provider ?? new MetaWhatsAppProvider(config);
   const stale = new Date(Date.now() - 5 * 60 * 1000);
   // A crash after starting an external send cannot be retried safely without checking Meta.

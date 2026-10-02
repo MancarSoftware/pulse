@@ -11,6 +11,8 @@ const icons: Record<string, IconName> = {
   "/expenses": "expenses",
   "/reports": "reports",
   "/settings": "settings",
+  "/subscription": "expenses",
+  "/platform": "settings",
 };
 export function NavLink({
   href,
