@@ -39,6 +39,26 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
       .fill(name);
     await saveDialog(page);
   }
+  await page.getByRole("button", { name: "Agregar", exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByLabel("Nombre", { exact: true })
+    .fill("Unused service");
+  await saveDialog(page);
+  await page
+    .getByRole("button", { name: "Eliminar Unused service", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Cancelar", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Eliminar Unused service", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Eliminar Unused service", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Confirmar eliminación" }).click();
+  await expect(
+    page.getByRole("button", { name: "Eliminar Unused service", exact: true }),
+  ).toHaveCount(0);
   await page.goto("/settings?tab=plans");
   await page.getByRole("button", { name: "Nuevo plan" }).click();
   let dialog = page.getByRole("dialog");

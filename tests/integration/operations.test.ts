@@ -463,3 +463,51 @@ describe("commerce and accounting", () => {
     ).rejects.toThrow();
   });
 });
+
+describe("catalog deletion", () => {
+  it("deletes unused records with an audit entry and isolates tenants", async () => {
+    const { deleteCatalog } = await import("@/modules/organizations/deletion");
+    const category = await saveCatalog(a.ctx, {
+      kind: "expense-category",
+      name: "Unused category",
+    });
+    await expect(
+      deleteCatalog(b.ctx, { kind: "expense-category", id: category.id }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(
+      deleteCatalog(
+        { ...a.ctx, role: "RECEPTIONIST" },
+        { kind: "expense-category", id: category.id },
+      ),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await deleteCatalog(a.ctx, { kind: "expense-category", id: category.id });
+    expect(
+      await db.expenseCategory.findUnique({ where: { id: category.id } }),
+    ).toBeNull();
+    expect(
+      await db.auditEvent.count({
+        where: {
+          organizationId: a.ctx.organizationId,
+          action: "catalog.expense-category.deleted",
+        },
+      }),
+    ).toBeGreaterThan(0);
+  });
+  it("preserves used plans and services and prevents deleting the active branch", async () => {
+    const { deleteCatalog } = await import("@/modules/organizations/deletion");
+    const fresh = await fixture();
+    await renewMembership(fresh.ctx, renewal(fresh));
+    await expect(
+      deleteCatalog(fresh.ctx, { kind: "plan", id: fresh.plan.id }),
+    ).rejects.toMatchObject({ code: "IN_USE" });
+    expect(
+      await db.planService.count({ where: { planId: fresh.plan.id } }),
+    ).toBe(1);
+    await expect(
+      deleteCatalog(fresh.ctx, { kind: "service", id: fresh.service.id }),
+    ).rejects.toMatchObject({ code: "IN_USE" });
+    await expect(
+      deleteCatalog(a.ctx, { kind: "branch", id: a.ctx.branchId }),
+    ).rejects.toMatchObject({ code: "ACTIVE_BRANCH" });
+  });
+});

@@ -105,7 +105,7 @@ export default async function Expenses({
               label="Registrar gasto y salida"
               fields={[
                 { name: "description", label: "Descripción del gasto" },
-                { name: "amount", label: "Importe USD" },
+                { name: "amount", label: "Importe USD", type: "decimal" },
                 {
                   name: "categoryId",
                   label: "Categoría",

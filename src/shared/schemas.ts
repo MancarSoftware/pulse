@@ -1,4 +1,13 @@
 import { z } from "zod";
+export const integerInput = z
+  .union([
+    z.number(),
+    z
+      .string()
+      .regex(/^-?[0-9]+$/, "Ingresa solo números enteros")
+      .transform(Number),
+  ])
+  .pipe(z.number().int());
 export const phoneNumber = z
   .string()
   .regex(

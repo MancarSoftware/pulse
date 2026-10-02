@@ -12,6 +12,21 @@ import { sellProducts } from "@/modules/sales/service";
 import { moveInventory } from "@/modules/inventory/service";
 import { recordExpense } from "@/modules/expenses/service";
 import { AppError } from "@/shared/errors";
+import { deleteCatalog } from "@/modules/organizations/deletion";
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ resource: string }> },
+) {
+  try {
+    checkOrigin(request);
+    const ctx = await getContext(request.headers);
+    if ((await params).resource !== "catalog")
+      throw new AppError("NOT_FOUND", "Operación no disponible", 404);
+    return Response.json(await deleteCatalog(ctx, await readBody(request)));
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ resource: string }> },

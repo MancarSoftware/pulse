@@ -2,18 +2,15 @@ import { z } from "zod";
 import { serializable } from "@/infrastructure/db";
 import { authorize, type Context } from "@/modules/auth/permissions";
 import { audit, branchScope } from "@/modules/transactions/service";
-import { id } from "@/shared/schemas";
+import { id, integerInput } from "@/shared/schemas";
 import { AppError, requireFound } from "@/shared/errors";
 export const movementSchema = z
   .object({
     branchId: id,
     productId: id,
     kind: z.enum(["PURCHASE", "DAMAGED", "ADJUSTMENT", "RETURN"]),
-    quantity: z.coerce
-      .number()
-      .int()
-      .min(-100000)
-      .max(100000)
+    quantity: integerInput
+      .pipe(z.number().min(-100000).max(100000))
       .refine((v) => v !== 0),
     reason: z.string().trim().min(3).max(300),
   })

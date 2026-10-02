@@ -209,7 +209,7 @@ export default async function CheckInPage({
                 type: "select",
                 options: serviceOptions,
               },
-              { name: "amount", label: "Importe USD" },
+              { name: "amount", label: "Importe USD", type: "decimal" },
               {
                 name: "paymentMethodId",
                 label: "Método de pago",

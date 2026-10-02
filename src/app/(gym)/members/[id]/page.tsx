@@ -247,7 +247,7 @@ export default async function MemberProfile({
                       name: "expectedPrice",
                       label: "Confirma el importe USD",
                       hint: "Debe coincidir con el precio del plan.",
-                      type: "text",
+                      type: "decimal",
                     },
                     {
                       name: "paymentMethodId",

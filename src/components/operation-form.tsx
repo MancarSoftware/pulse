@@ -1,6 +1,7 @@
 "use client";
 import { useId, useState, type ReactNode, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { NumericInput } from "./numeric-input";
 export type Field = {
   name: string;
   label: string;
@@ -10,6 +11,7 @@ export type Field = {
     | "email"
     | "password"
     | "number"
+    | "decimal"
     | "date"
     | "textarea"
     | "select"
@@ -19,6 +21,8 @@ export type Field = {
   value?: string;
   required?: boolean;
   min?: string;
+  max?: string;
+  signed?: boolean;
   step?: string;
   hint?: string;
   maxLength?: number;
@@ -65,7 +69,9 @@ export function OperationForm({
           ? formData.has(f.name)
           : f.type === "multiselect"
             ? formData.getAll(f.name)
-            : formData.get(f.name);
+            : f.type === "decimal"
+              ? String(formData.get(f.name) ?? "").replace(",", ".")
+              : formData.get(f.name);
     if (financial) {
       const nextKey = key ?? crypto.randomUUID();
       setKey(nextKey);
@@ -169,6 +175,24 @@ export function OperationForm({
                 type="checkbox"
                 name={f.name}
                 defaultChecked={f.value !== "false"}
+              />
+            ) : f.type === "number" || f.type === "decimal" ? (
+              <NumericInput
+                aria-labelledby={`${formId}-${f.name}-label`}
+                aria-describedby={
+                  f.hint ? `${formId}-${f.name}-hint` : undefined
+                }
+                name={f.name}
+                defaultValue={f.value}
+                decimal={f.type === "decimal"}
+                signed={f.signed}
+                required={f.required !== false}
+                min={
+                  f.min ??
+                  (f.type === "decimal" ? "0.01" : f.signed ? undefined : "0")
+                }
+                max={f.max}
+                maxLength={f.maxLength ?? (f.type === "decimal" ? 13 : 7)}
               />
             ) : (
               <input

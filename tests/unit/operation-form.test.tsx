@@ -66,3 +66,32 @@ describe("form feedback", () => {
     expect(first.idempotencyKey).toBe(second.idempotencyKey);
   });
 });
+
+it("rejects invalid numeric input and normalizes decimal money", async () => {
+  const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
+  vi.stubGlobal("fetch", fetch);
+  render(
+    <OperationForm
+      endpoint="/test"
+      fields={[
+        { name: "quantity", label: "Cantidad", type: "number", signed: true },
+        { name: "price", label: "Precio", type: "decimal" },
+      ]}
+    />,
+  );
+  const quantity = screen.getByLabelText("Cantidad", { exact: true });
+  fireEvent.change(quantity, { target: { value: "-12" } });
+  fireEvent.change(quantity, { target: { value: "1e3" } });
+  expect(quantity).toHaveValue("-12");
+  const price = screen.getByLabelText("Precio", { exact: true });
+  fireEvent.change(price, { target: { value: "12,50" } });
+  fireEvent.change(price, { target: { value: "12,501" } });
+  fireEvent.change(price, { target: { value: "abc" } });
+  expect(price).toHaveValue("12,50");
+  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  await waitFor(() => expect(fetch).toHaveBeenCalled());
+  expect(JSON.parse(fetch.mock.calls[0][1].body)).toMatchObject({
+    quantity: "-12",
+    price: "12.50",
+  });
+});

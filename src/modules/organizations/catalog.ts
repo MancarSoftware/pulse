@@ -3,7 +3,13 @@ import { hashPassword } from "better-auth/crypto";
 import { serializable } from "@/infrastructure/db";
 import { authorize, type Context } from "@/modules/auth/permissions";
 import { audit, branchScope } from "@/modules/transactions/service";
-import { name, id, amount, nonnegativeAmount } from "@/shared/schemas";
+import {
+  name,
+  id,
+  amount,
+  nonnegativeAmount,
+  integerInput,
+} from "@/shared/schemas";
 import { money } from "@/shared/money";
 import { AppError, requireFound } from "@/shared/errors";
 const active = z.boolean().default(true);
@@ -12,7 +18,7 @@ export const catalogSchema = z.discriminatedUnion("kind", [
     .object({
       kind: z.literal("organization"),
       name,
-      duplicateScanSeconds: z.coerce.number().int().min(5).max(300),
+      duplicateScanSeconds: integerInput.pipe(z.number().min(5).max(300)),
     })
     .strict(),
   z
@@ -49,12 +55,10 @@ export const catalogSchema = z.discriminatedUnion("kind", [
       name,
       description: z.string().max(1000).default(""),
       price: amount,
-      durationMonths: z.coerce
-        .number()
-        .refine(
-          (value) => [1, 3, 6].includes(value),
-          "Selecciona 1, 3 o 6 meses",
-        ),
+      durationMonths: integerInput.refine(
+        (value) => [1, 3, 6].includes(value),
+        "Selecciona 1, 3 o 6 meses",
+      ),
       serviceIds: z.array(id).min(1).max(30),
       active,
       id: id.optional(),
@@ -70,7 +74,7 @@ export const catalogSchema = z.discriminatedUnion("kind", [
       category: z.string().max(80).default(""),
       price: amount,
       cost: nonnegativeAmount,
-      lowStock: z.coerce.number().int().min(0).max(100000),
+      lowStock: integerInput.pipe(z.number().min(0).max(100000)),
       active,
       id: id.optional(),
     })

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { NumericInput } from "./numeric-input";
 type Product = { id: string; name: string; price: string; available: number };
 const cents = (value: string) => {
   const [whole, fraction = ""] = value.split(".");
@@ -146,10 +147,10 @@ export function PosCart({
               </div>
               <label>
                 <span className="sr-only">Cantidad de {l.product.name}</span>
-                <input
-                  type="number"
+                <NumericInput
                   min={1}
                   max={l.product.available}
+                  required
                   value={l.quantity}
                   disabled={busy}
                   onChange={(e) =>

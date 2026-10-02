@@ -7,6 +7,8 @@ import { OperationForm, type Field } from "@/components/operation-form";
 import { Modal } from "@/components/modal";
 import { formatMoney } from "@/shared/money";
 import { durationLabel } from "@/shared/presentation";
+import { DeleteAction } from "@/components/delete-action";
+import { Icon, type IconName } from "@/components/icon";
 export default async function Settings({
   searchParams,
 }: {
@@ -49,6 +51,7 @@ export default async function Settings({
               label: "Intervalo entre ingresos duplicados (segundos)",
               type: "number",
               min: "5",
+              max: "300",
               value: String(organization.duplicateScanSeconds),
               hint: "Entre 5 y 300 segundos.",
             },
@@ -65,7 +68,7 @@ export default async function Settings({
     });
     const fields: Field[] = [
       nameField,
-      { name: "price", label: "Precio USD" },
+      { name: "price", label: "Precio USD", type: "decimal" },
       {
         name: "durationMonths",
         label: "Duración de la membresía",
@@ -112,7 +115,7 @@ export default async function Settings({
                 <th>Duración</th>
                 <th>Precio</th>
                 <th>Estado</th>
-                <th />
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -125,7 +128,13 @@ export default async function Settings({
                       : `Revisar: ${p.durationDays} días (anterior)`}
                   </td>
                   <td>{formatMoney(p.price)}</td>
-                  <td>{p.active ? "Habilitado" : "Deshabilitado"}</td>
+                  <td>
+                    <span
+                      className={`status ${p.active ? "success" : "neutral"}`}
+                    >
+                      {p.active ? "Habilitado" : "Deshabilitado"}
+                    </span>
+                  </td>
                   <td>
                     <Modal title="Editar plan" trigger="Editar">
                       <OperationForm
@@ -150,6 +159,7 @@ export default async function Settings({
                         }))}
                       />
                     </Modal>
+                    <DeleteAction kind="plan" id={p.id} name={p.name} />
                   </td>
                 </tr>
               ))}
@@ -218,7 +228,7 @@ export default async function Settings({
                 <th>Sucursal</th>
                 <th>Rol</th>
                 <th>Acceso</th>
-                <th />
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -323,14 +333,20 @@ export default async function Settings({
               <tr>
                 <th>Nombre</th>
                 <th>Estado</th>
-                <th />
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {config.rows.map((row) => (
                 <tr key={row.id}>
                   <td>{row.name}</td>
-                  <td>{row.active ? "Habilitado" : "Deshabilitado"}</td>
+                  <td>
+                    <span
+                      className={`status ${row.active ? "success" : "neutral"}`}
+                    >
+                      {row.active ? "Habilitado" : "Deshabilitado"}
+                    </span>
+                  </td>
                   <td>
                     <Modal title="Editar configuración" trigger="Editar">
                       <OperationForm
@@ -353,6 +369,13 @@ export default async function Settings({
                         ]}
                       />
                     </Modal>
+                    {!(config.kind === "branch" && row.id === ctx.branchId) && (
+                      <DeleteAction
+                        kind={config.kind}
+                        id={row.id}
+                        name={row.name}
+                      />
+                    )}
                   </td>
                 </tr>
               ))}
@@ -373,53 +396,66 @@ export default async function Settings({
           </p>
         </div>
       </div>
-      <nav className="tabs" aria-label="Configuración">
-        <Link
-          href="/settings?tab=general"
-          aria-current={tab === "general" ? "page" : undefined}
-        >
-          General
-        </Link>
-        <Link
-          href="/settings"
-          aria-current={tab === "services" ? "page" : undefined}
-        >
-          Servicios
-        </Link>
-        <Link
-          href="/settings?tab=plans"
-          aria-current={tab === "plans" ? "page" : undefined}
-        >
-          Planes
-        </Link>
-        <Link
-          href="/settings?tab=branches"
-          aria-current={tab === "branches" ? "page" : undefined}
-        >
-          Sucursales
-        </Link>
-        <Link
-          href="/settings?tab=methods"
-          aria-current={tab === "methods" ? "page" : undefined}
-        >
-          Métodos de pago
-        </Link>
-        <Link
-          href="/settings?tab=categories"
-          aria-current={tab === "categories" ? "page" : undefined}
-        >
-          Categorías de gastos
-        </Link>
-        {can(ctx.role, "staff:write") && (
+      <div className="settings-layout">
+        <nav className="tabs settings-nav" aria-label="Configuración">
+          <div className="settings-nav-title">
+            <Icon name="settings" /> Tu gimnasio
+          </div>
           <Link
-            href="/settings?tab=staff"
-            aria-current={tab === "staff" ? "page" : undefined}
+            href="/settings?tab=general"
+            aria-current={tab === "general" ? "page" : undefined}
           >
-            Equipo
+            General
           </Link>
-        )}
-      </nav>
-      <section className="panel">{content}</section>
+          <Link
+            href="/settings"
+            aria-current={tab === "services" ? "page" : undefined}
+          >
+            Servicios
+          </Link>
+          <Link
+            href="/settings?tab=plans"
+            aria-current={tab === "plans" ? "page" : undefined}
+          >
+            Planes
+          </Link>
+          <Link
+            href="/settings?tab=branches"
+            aria-current={tab === "branches" ? "page" : undefined}
+          >
+            Sucursales
+          </Link>
+          <Link
+            href="/settings?tab=methods"
+            aria-current={tab === "methods" ? "page" : undefined}
+          >
+            Métodos de pago
+          </Link>
+          <Link
+            href="/settings?tab=categories"
+            aria-current={tab === "categories" ? "page" : undefined}
+          >
+            Categorías de gastos
+          </Link>
+          {can(ctx.role, "staff:write") && (
+            <Link
+              href="/settings?tab=staff"
+              aria-current={tab === "staff" ? "page" : undefined}
+            >
+              Equipo
+            </Link>
+          )}
+        </nav>
+        <section className="panel settings-panel">
+          {content}
+          {tab !== "general" && tab !== "staff" && (
+            <p className="settings-note">
+              <Icon name={"check" as IconName} /> Puedes eliminar registros sin
+              uso. Deshabilita los utilizados para conservar su historial.
+            </p>
+          )}
+        </section>
+      </div>
     </>
   );
 }

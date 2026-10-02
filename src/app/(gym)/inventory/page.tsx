@@ -12,6 +12,7 @@ import { Modal } from "@/components/modal";
 import { Pagination } from "@/components/pagination";
 import { formatMoney } from "@/shared/money";
 import { formatDate } from "@/shared/dates";
+import { DeleteAction } from "@/components/delete-action";
 export default async function Inventory({
   searchParams,
 }: {
@@ -50,13 +51,20 @@ export default async function Inventory({
     { name: "sku", label: "SKU" },
     { name: "barcode", label: "Código de barras", required: false },
     { name: "category", label: "Categoría", required: false },
-    { name: "cost", label: "Costo USD", value: "0.00" },
-    { name: "price", label: "Precio USD" },
+    {
+      name: "cost",
+      label: "Costo USD",
+      type: "decimal",
+      min: "0",
+      value: "0.00",
+    },
+    { name: "price", label: "Precio USD", type: "decimal" },
     {
       name: "lowStock",
       label: "Umbral de stock bajo",
       type: "number",
       min: "0",
+      max: "100000",
       value: "5",
     },
     { name: "active", label: "Disponible para venta", type: "checkbox" },
@@ -160,6 +168,9 @@ export default async function Inventory({
                                 name: "quantity",
                                 label: "Cantidad con signo",
                                 type: "number",
+                                signed: true,
+                                min: "-100000",
+                                max: "100000",
                                 hint: "Ejemplo: 20 para entrada, -2 para salida.",
                               },
                               { name: "reason", label: "Motivo" },
@@ -176,6 +187,7 @@ export default async function Inventory({
                             }))}
                           />
                         </Modal>
+                        <DeleteAction kind="product" id={p.id} name={p.name} />
                       </div>
                     </td>
                   </tr>
