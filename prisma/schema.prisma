@@ -127,7 +127,7 @@ model PlatformAudit {
 model SaaSBillingSettings {
   id String @id @default("main")
   trialDays Int @default(0)
-  graceDays Int @default(3)
+  graceDays Int @default(1)
   paymentInstructions String @default("")
   updatedAt DateTime @updatedAt
 }
@@ -148,7 +148,7 @@ model SaaSSubscription {
   paidUntil DateTime?
   planId String?
   plan SaaSPlan? @relation(fields: [planId], references: [id])
-  graceDays Int @default(3)
+  graceDays Int @default(1)
   updatedAt DateTime @updatedAt
 }
 enum SaaSPaymentStatus {

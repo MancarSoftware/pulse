@@ -13,6 +13,7 @@ import {
   subscriptionLabels,
   subscriptionStatus,
 } from "@/modules/billing/status";
+import { saasPeriodLabel } from "@/modules/billing/schedule";
 import { Pagination } from "@/components/pagination";
 import { pagination, type Search } from "@/modules/reports/queries";
 export default async function PlatformPage({
@@ -66,7 +67,8 @@ export default async function PlatformPage({
         type: "select",
         options: [
           { value: "1", label: "Mensual · 1 mes" },
-          { value: "12", label: "Anual · 12 meses" },
+          { value: "3", label: "Trimestral · 3 meses" },
+          { value: "6", label: "Semestral · 6 meses" },
         ],
       },
       {
@@ -105,7 +107,7 @@ export default async function PlatformPage({
                 <tr key={p.id}>
                   <td>{p.name}</td>
                   <td>{formatMoney(p.price)}</td>
-                  <td>{p.durationMonths === 12 ? "Anual" : "Mensual"}</td>
+                  <td>{saasPeriodLabel(p.durationMonths)}</td>
                   <td>{p.active ? "Publicado" : "Borrador"}</td>
                   <td>
                     <Modal title="Editar plan SaaS" trigger="Editar">
@@ -140,21 +142,19 @@ export default async function PlatformPage({
     content = (
       <section className="panel">
         <h2>Política y datos de pago</h2>
+        <p className="notice warning">
+          Cobro automático pendiente de configuración. Falta conectar un
+          proveedor de pagos recurrentes; actualmente los pagos requieren
+          verificación manual.
+        </p>
         <p className="notice">
           Sin prueba gratuita. La gracia empieza cuando vence una suscripción ya
-          pagada. Los cambios de gracia aplican al próximo pago aprobado.
+          pagada: un día calendario. Renovaciones el 30 (último día en febrero).
         </p>
         <OperationForm
           endpoint="/api/platform/settings"
+          fixed={{ graceDays: 1 }}
           fields={[
-            {
-              name: "graceDays",
-              label: "Días de gracia",
-              type: "number",
-              min: "0",
-              max: "30",
-              value: String(settings.graceDays),
-            },
             {
               name: "paymentInstructions",
               label: "Instrucciones para pagar",

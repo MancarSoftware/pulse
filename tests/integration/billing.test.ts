@@ -6,6 +6,7 @@ import {
   reviewSubscriptionPayment,
   saveSaaSPlan,
   ownerBilling,
+  saveBillingSettings,
 } from "@/modules/billing/service";
 import {
   requireSubscription,
@@ -47,7 +48,7 @@ async function arrange() {
     where: { id: "main" },
     data: {
       trialDays: 0,
-      graceDays: 3,
+      graceDays: 1,
       paymentInstructions: "Test only. No actual payments.",
     },
   });
@@ -125,7 +126,7 @@ it("only verified approval activates access, survives concurrent replay and pres
     id: plan.id,
     name: "Changed future quote",
     price: "99.00",
-    durationMonths: 12,
+    durationMonths: 6,
     active: false,
   });
   const verify = approval(payment.id);
@@ -139,12 +140,25 @@ it("only verified approval activates access, survives concurrent replay and pres
   expect(row.amount.toFixed(2)).toBe("29.00");
   expect(row.durationMonths).toBe(1);
   expect(row.status).toBe("APPROVED");
+  const [endYear, endMonth, endDay] = localDate(row.periodEnd!)
+    .split("-")
+    .map(Number);
+  expect(endDay).toBe(
+    Math.min(30, new Date(Date.UTC(endYear, endMonth, 0)).getUTCDate()),
+  );
   expect((await subscriptionAccess(ctx.organizationId)).state).toBe("ACTIVE");
   const originalEnd = (
     await db.saaSSubscription.findUniqueOrThrow({
       where: { organizationId: ctx.organizationId },
     })
   ).paidUntil;
+  expect(
+    (
+      await db.saaSSubscription.findUniqueOrThrow({
+        where: { organizationId: ctx.organizationId },
+      })
+    ).graceDays,
+  ).toBe(1);
   await reviewSubscriptionPayment(admin, verify);
   expect(
     (
@@ -257,4 +271,49 @@ it("accepts only one of two simultaneous pending submissions", async () => {
       where: { organizationId: ctx.organizationId, status: "PENDING" },
     }),
   ).toBe(1);
+});
+it("offers 1, 3 and 6 months and rejects other durations or a longer grace", async () => {
+  const { ctx, admin } = await arrange();
+  for (const [months, price] of [
+    [3, "70.00"],
+    [6, "135.00"],
+  ] as const) {
+    const plan = await saveSaaSPlan(admin, {
+      name: `Term ${months}`,
+      price,
+      durationMonths: months,
+      active: true,
+    });
+    const payment = await submitSubscriptionPayment(ctx, {
+      ...submission(plan.id),
+      expectedPrice: price,
+    });
+    await reviewSubscriptionPayment(admin, approval(payment.id));
+    const row = await db.saaSPayment.findUniqueOrThrow({
+      where: { id: payment.id },
+    });
+    expect(row.durationMonths).toBe(months);
+    expect(row.amount.toFixed(2)).toBe(price);
+    const [startYear, startMonth] = localDate(row.periodStart!)
+      .split("-")
+      .map(Number);
+    const [endYear, endMonth] = localDate(row.periodEnd!)
+      .split("-")
+      .map(Number);
+    const elapsedMonths = (endYear - startYear) * 12 + endMonth - startMonth;
+    expect(elapsedMonths).toBeGreaterThanOrEqual(months);
+    expect(elapsedMonths).toBeLessThanOrEqual(months + 1);
+  }
+  for (const months of [2, 12])
+    await expect(
+      saveSaaSPlan(admin, {
+        name: "Unsupported",
+        price: "25.00",
+        durationMonths: months,
+        active: true,
+      }),
+    ).rejects.toThrow();
+  await expect(
+    saveBillingSettings(admin, { graceDays: 3, paymentInstructions: "Test" }),
+  ).rejects.toThrow();
 });

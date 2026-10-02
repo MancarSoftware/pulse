@@ -9,6 +9,7 @@ import { formatDate } from "@/shared/dates";
 import { formatMoney } from "@/shared/money";
 import { Modal } from "@/components/modal";
 import { OperationForm } from "@/components/operation-form";
+import { saasPeriodLabel } from "@/modules/billing/schedule";
 import { Pagination } from "@/components/pagination";
 import { pagination, type Search } from "@/modules/reports/queries";
 export default async function SubscriptionPage({
@@ -82,6 +83,9 @@ export default async function SubscriptionPage({
               ? `Pagada hasta el ${formatDate(new Date(data.subscription.paidUntil.getTime() - 1))}, inclusive.`
               : "No hay pagos aprobados. La cuenta se activa después de verificar el primer pago."}
           </p>
+          {data.subscription?.paidUntil && (
+            <p>Próxima renovación: {formatDate(data.subscription.paidUntil)}</p>
+          )}
           {status.state === "GRACE" && (
             <p className="notice warning">
               Renueva antes de finalizar el{" "}
@@ -99,7 +103,7 @@ export default async function SubscriptionPage({
         <div className="billing-policy">
           <strong>Sin prueba gratuita</strong>
           <span>
-            {data.subscription?.graceDays ?? data.settings.graceDays} días de
+            {data.subscription?.graceDays ?? data.settings.graceDays} día de
             gracia después de una suscripción pagada
           </span>
           <span>
@@ -115,14 +119,18 @@ export default async function SubscriptionPage({
       )}
       <section className="panel">
         <h2>Cómo pagar</h2>
+        <p className="notice warning">
+          Cobro automático pendiente de configuración. Por ahora, realiza el
+          pago e informa su referencia para verificación.
+        </p>
         {data.settings.paymentInstructions ? (
           <p className="billing-instructions">
             {data.settings.paymentInstructions}
           </p>
         ) : (
           <p className="notice warning">
-            MANCAR todavía debe publicar sus precios e instrucciones de pago. No
-            se han configurado datos bancarios.
+            MANCAR todavía debe publicar sus instrucciones de pago. No se han
+            configurado datos bancarios.
           </p>
         )}
         <p className="muted">
@@ -130,6 +138,12 @@ export default async function SubscriptionPage({
           verifica el movimiento y te muestra el resultado aquí.
         </p>
       </section>
+      <p className="notice">
+        Renovación el 30 cada 1, 3 o 6 meses; en febrero, el último día. La
+        primera activación conserva el período completo y añade sin costo los
+        días necesarios para alinearlo. Un día de gracia; después, acceso
+        suspendido hasta confirmar el pago.
+      </p>
       <section aria-label="Planes del sistema">
         <div className="section-heading">
           <h2>Elige tu suscripción</h2>
@@ -145,17 +159,30 @@ export default async function SubscriptionPage({
           {data.plans.map((plan) => (
             <article className="panel billing-plan" key={plan.id}>
               <span className="eyebrow">
-                {plan.durationMonths === 12 ? "ANUAL" : "MENSUAL"}
+                {saasPeriodLabel(plan.durationMonths).toUpperCase()}
               </span>
               <h3>{plan.name}</h3>
               <p className="billing-price">
                 {formatMoney(plan.price)}
-                <small> / {plan.durationMonths === 12 ? "año" : "mes"}</small>
+                <small>
+                  {" "}
+                  /{" "}
+                  {plan.durationMonths === 1
+                    ? "mes"
+                    : `${plan.durationMonths} meses`}
+                </small>
               </p>
               <p className="muted">
                 Acceso al sistema de gestión del gimnasio durante{" "}
-                {plan.durationMonths === 12 ? "12 meses" : "1 mes"} calendario.
+                {plan.durationMonths} mes(es) calendario.
               </p>
+              {plan.durationMonths > 1 && (
+                <p className="muted">
+                  Equivale a{" "}
+                  {formatMoney(plan.price.dividedBy(plan.durationMonths))} por
+                  mes; pago del período completo.
+                </p>
+              )}
               {canSubmit ? (
                 <Modal
                   title={`Informar pago · ${plan.name}`}

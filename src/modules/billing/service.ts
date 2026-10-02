@@ -12,7 +12,7 @@ import {
   name,
   nonnegativeAmount,
 } from "@/shared/schemas";
-import { addCalendarMonths, dayStart, localDate } from "@/shared/dates";
+import { saasRenewalWindow } from "./schedule";
 
 export function billingOwner(ctx: Context) {
   if (ctx.role !== "OWNER")
@@ -75,7 +75,13 @@ export async function submitSubscriptionPayment(ctx: Context, input: unknown) {
         409,
       );
     const plan = requireFound(
-      await tx.saaSPlan.findFirst({ where: { id: data.planId, active: true } }),
+      await tx.saaSPlan.findFirst({
+        where: {
+          id: data.planId,
+          active: true,
+          durationMonths: { in: [1, 3, 6] },
+        },
+      }),
     );
     if (!plan.price.equals(data.expectedPrice))
       throw new AppError(
@@ -195,20 +201,17 @@ export async function reviewSubscriptionPayment(
           "Ese movimiento bancario ya respaldó otro pago.",
           409,
         );
-      const today = dayStart(localDate());
-      const startAt =
-        subscription.paidUntil && subscription.paidUntil > today
-          ? subscription.paidUntil
-          : today;
-      const endAt = addCalendarMonths(startAt, payment.durationMonths);
-      period = { periodStart: startAt, periodEnd: endAt };
+      period = saasRenewalWindow(
+        payment.durationMonths,
+        subscription.paidUntil,
+      );
       const settings = await tx.saaSBillingSettings.findUniqueOrThrow({
         where: { id: "main" },
       });
       await tx.saaSSubscription.update({
         where: { organizationId: payment.organizationId },
         data: {
-          paidUntil: endAt,
+          paidUntil: period.periodEnd,
           planId: payment.planId,
           graceDays: settings.graceDays,
         },
@@ -257,7 +260,9 @@ export async function saveSaaSPlan(userId: string, input: unknown) {
       id: id.optional(),
       name,
       price: nonnegativeAmount,
-      durationMonths: integerInput.pipe(z.union([z.literal(1), z.literal(12)])),
+      durationMonths: integerInput.pipe(
+        z.union([z.literal(1), z.literal(3), z.literal(6)]),
+      ),
       active: z.boolean(),
     })
     .strict()
@@ -313,7 +318,7 @@ export async function saveBillingSettings(userId: string, input: unknown) {
   await requirePlatformAdmin(userId);
   const data = z
     .object({
-      graceDays: integerInput.pipe(z.number().min(0).max(30)),
+      graceDays: integerInput.pipe(z.literal(1)),
       paymentInstructions: z.string().trim().max(2000),
     })
     .strict()
@@ -339,7 +344,7 @@ export async function saveBillingSettings(userId: string, input: unknown) {
     });
     return {
       message:
-        "Instrucciones actualizadas. La gracia se aplica al próximo pago aprobado; no se ofrecen pruebas gratuitas.",
+        "Instrucciones actualizadas. Se mantiene un día de gracia y no se ofrecen pruebas gratuitas.",
     };
   });
 }
@@ -359,7 +364,7 @@ export async function ownerBilling(ctx: Context, page = 1) {
       include: { plan: true },
     }),
     db.saaSPlan.findMany({
-      where: { active: true },
+      where: { active: true, durationMonths: { in: [1, 3, 6] } },
       orderBy: { price: "asc" },
       take: 30,
     }),
