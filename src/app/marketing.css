@@ -21,6 +21,23 @@
   border-radius: 8px;
   padding: 12px 21px;
 }
+.marketing :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.marketing :is(.marketing-hero, .marketing-start) :focus-visible {
+  outline-color: var(--lime);
+}
+.marketing a:not(.button) {
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1px;
+}
+.marketing :is(.button, .marketing-text-link, .marketing-footer > a) svg {
+  transition: transform 160ms ease;
+}
+.marketing :is(.button, .marketing-text-link, .marketing-footer > a):hover svg {
+  transform: translateX(3px);
+}
 .marketing-header {
   position: sticky;
   top: 0;
@@ -45,6 +62,9 @@
   align-items: center;
   min-height: 44px;
   font-weight: 550;
+}
+.marketing-header nav > a:not(.button):hover {
+  color: var(--accent);
 }
 .marketing-login {
   margin-left: 15px;
@@ -196,6 +216,10 @@
   width: 17px;
   height: 17px;
 }
+.walkthrough-tabs button:focus-visible,
+.walkthrough-panel:focus-visible {
+  outline-offset: -4px;
+}
 .walkthrough-panel {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
@@ -259,7 +283,10 @@
 }
 .walkthrough-status {
   margin-left: auto;
-  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 5px;
+  background: #e5f3eb;
+  font-size: 11px;
   font-weight: 500;
   color: var(--accent);
 }
@@ -277,6 +304,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 .walkthrough-member > div,
 .walkthrough-sale > div {
@@ -420,7 +448,7 @@
 }
 .marketing-pricing-copy small {
   display: block;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--marketing-muted);
   line-height: 1.8;
   max-width: 385px;
@@ -461,7 +489,7 @@
 }
 .plan-options button span {
   display: block;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 400;
   margin-top: 3px;
 }
@@ -495,7 +523,7 @@
   font-variant-numeric: tabular-nums;
 }
 .plan-total > span {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--marketing-muted);
 }
 .plan-equivalent {
@@ -554,7 +582,7 @@
   color: var(--accent);
 }
 .marketing-questions details:first-child summary {
-  padding-top: 4px;
+  padding-top: 17px;
 }
 .marketing-questions details p {
   font-size: 13px;
@@ -594,7 +622,7 @@
   border-top: 1px solid #e1e8e8;
 }
 .marketing-footer p {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--marketing-muted);
   margin: 0;
 }
@@ -786,6 +814,7 @@
     grid-row: 2;
   }
   .marketing-pricing {
+    grid-template-columns: 1fr;
     gap: 30px;
   }
   .marketing-pricing h2 {
@@ -795,7 +824,8 @@
     padding: 18px;
   }
   .plan-options button {
-    font-size: 10px;
+    font-size: 12px;
+    padding-inline: 5px;
   }
   .plan-total strong {
     font-size: 36px;
@@ -870,9 +900,10 @@
     justify-content: space-between;
   }
   .walkthrough-tabs button {
-    font-size: 11px;
+    flex: 1;
+    font-size: 12px;
     gap: 6px;
-    padding: 9px;
+    padding: 9px 5px;
   }
   .walkthrough-tabs svg {
     width: 15px;
@@ -884,25 +915,25 @@
     font-size: 22px;
   }
   .walkthrough-caption p {
-    font-size: 13px;
+    font-size: 14px;
   }
   .walkthrough-screen {
     padding: 18px 14px;
   }
   .walkthrough-screen-title {
-    font-size: 11px;
-    gap: 5px;
+    font-size: 12px;
+    gap: 8px;
   }
   .walkthrough-status {
-    font-size: 9px;
+    font-size: 11px;
   }
   .walkthrough-member strong,
   .walkthrough-sale strong {
-    font-size: 12px;
+    font-size: 13px;
   }
   .walkthrough-member div > span,
   .walkthrough-sale div > span {
-    font-size: 10px;
+    font-size: 12px;
   }
   .walkthrough-sale {
     gap: 9px;
@@ -912,20 +943,20 @@
     height: 24px;
   }
   .walkthrough-sale > span {
-    font-size: 10px;
+    font-size: 11px;
   }
   .walkthrough-checks li {
-    font-size: 11px;
+    font-size: 12px;
   }
   .walkthrough-result {
     padding: 12px;
     gap: 9px;
   }
   .walkthrough-result strong {
-    font-size: 12px;
+    font-size: 13px;
   }
   .walkthrough-result span {
-    font-size: 10px;
+    font-size: 12px;
   }
   .walkthrough-disclaimer {
     padding: 12px 16px;
@@ -945,7 +976,7 @@
     padding: 20px;
   }
   .plan-options button {
-    font-size: 11px;
+    font-size: 12px;
   }
   .plan-total strong {
     font-size: 41px;
@@ -954,7 +985,7 @@
     padding-block: 32px;
   }
   .marketing-questions summary {
-    font-size: 13px;
+    font-size: 14px;
   }
   .marketing-start {
     padding: 24px;
@@ -986,6 +1017,11 @@
     transition: none !important;
   }
   .marketing .button:hover {
+    transform: none;
+  }
+  .marketing
+    :is(.button, .marketing-text-link, .marketing-footer > a):hover
+    svg {
     transform: none;
   }
 }
