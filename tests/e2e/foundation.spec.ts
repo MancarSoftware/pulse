@@ -8,9 +8,16 @@ test("owner creates organization, opens protected data and logs out", async ({
 }) => {
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Tu gimnasio, en movimiento." }),
+    page.getByRole("heading", {
+      name: "Administra tu gimnasio sin complicar tu día.",
+    }),
   ).toBeVisible();
   await expect(page).toHaveTitle(/Gymora/);
+  await page.getByRole("button", { name: /Trimestral/ }).click();
+  await expect(
+    page.getByRole("button", { name: /Trimestral/ }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".plan-summary")).toContainText("Trimestral");
   await page.getByRole("tab", { name: "Membresías", exact: true }).click();
   await expect(page.getByRole("tabpanel")).toContainText("1 mes calendario");
   await page
@@ -22,6 +29,11 @@ test("owner creates organization, opens protected data and logs out", async ({
   await expect(page.getByRole("tabpanel")).toContainText(
     "Cobro y stock conectados",
   );
+  await page.getByRole("link", { name: "Probar 2 días" }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Probar 2 días" })).toBeFocused();
   await page.getByRole("link", { name: "Probar 2 días" }).click();
   await page.getByLabel("Nombre completo").fill("Propietario de prueba");
   const email = `owner-${crypto.randomUUID()}@example.test`;

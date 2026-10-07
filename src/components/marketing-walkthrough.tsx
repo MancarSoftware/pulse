@@ -2,26 +2,27 @@
 
 import { useRef, useState, type KeyboardEvent } from "react";
 import { Icon } from "@/components/icon";
+import { TrialButton } from "@/components/trial-access";
 
 const views = [
   {
     name: "Accesos",
     icon: "access",
-    title: "Una entrada, todo comprobado",
+    title: "Comprueba el acceso antes de registrar el ingreso.",
     description:
       "El QR identifica al socio. Gymora revisa su membresía, el servicio y si ya ingresó hoy.",
   },
   {
     name: "Membresías",
     icon: "members",
-    title: "Cada socio, con su próximo paso",
+    title: "Consulta la membresía desde el perfil del socio.",
     description:
       "Consulta el plan, la fecha de vencimiento y los servicios incluidos desde el perfil del socio.",
   },
   {
     name: "Caja",
     icon: "pos",
-    title: "Una venta que también actualiza el stock",
+    title: "Cobra la venta y actualiza el inventario.",
     description:
       "Agrega productos, elige la forma de pago y confirma la venta en una sola operación.",
   },
@@ -44,10 +45,6 @@ export function MarketingWalkthrough() {
   }
   return (
     <div className="product-walkthrough">
-      <div className="walkthrough-heading">
-        <span>CONOCE EL SISTEMA</span>
-        <span className="walkthrough-example">Ejemplo de uso</span>
-      </div>
       <div
         role="tablist"
         aria-label="Explorar funciones de Gymora"
@@ -83,6 +80,13 @@ export function MarketingWalkthrough() {
           tabIndex={0}
           className="walkthrough-panel"
         >
+          <div className="walkthrough-caption">
+            <h3>{view.title}</h3>
+            <p>{view.description}</p>
+            <TrialButton className="marketing-text-link">
+              Probar esta función <Icon name="arrow" />
+            </TrialButton>
+          </div>
           <div className="walkthrough-screen">
             {index === 0 && (
               <>
@@ -205,10 +209,6 @@ export function MarketingWalkthrough() {
                 </div>
               </>
             )}
-          </div>
-          <div className="walkthrough-caption">
-            <h2>{view.title}</h2>
-            <p>{view.description}</p>
           </div>
         </div>
       ))}
