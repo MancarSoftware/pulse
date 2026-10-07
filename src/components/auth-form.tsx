@@ -3,7 +3,13 @@ import { useState, type FormEvent } from "react";
 import { createAuthClient } from "better-auth/react";
 import { useRouter } from "next/navigation";
 const client = createAuthClient();
-export function AuthForm({ register = false }: { register?: boolean }) {
+export function AuthForm({
+  register = false,
+  registerLabel = "Crear cuenta de propietario",
+}: {
+  register?: boolean;
+  registerLabel?: string;
+}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -84,7 +90,7 @@ export function AuthForm({ register = false }: { register?: boolean }) {
         {busy
           ? "Procesando…"
           : register
-            ? "Crear cuenta de propietario"
+            ? registerLabel
             : "Entrar a mi gimnasio"}
       </button>
     </form>

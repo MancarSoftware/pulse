@@ -11,13 +11,25 @@ test("owner creates organization, opens protected data and logs out", async ({
     page.getByRole("heading", { name: "Tu gimnasio, en movimiento." }),
   ).toBeVisible();
   await expect(page).toHaveTitle(/Gymora/);
+  await page.getByRole("tab", { name: "Membresías", exact: true }).click();
+  await expect(page.getByRole("tabpanel")).toContainText("1 mes calendario");
+  await page
+    .getByRole("tab", { name: "Membresías", exact: true })
+    .press("ArrowRight");
+  await expect(
+    page.getByRole("tab", { name: "Caja", exact: true }),
+  ).toBeFocused();
+  await expect(page.getByRole("tabpanel")).toContainText(
+    "Cobro y stock conectados",
+  );
+  await page.getByRole("link", { name: "Probar 2 días" }).click();
   await page.getByLabel("Nombre completo").fill("Propietario de prueba");
   const email = `owner-${crypto.randomUUID()}@example.test`;
   const password = `Test-${crypto.randomUUID()}!`;
   await page.getByLabel("Correo electrónico").fill(email);
   await page.getByLabel("Contraseña", { exact: true }).fill(password);
   await page
-    .getByRole("button", { name: "Crear cuenta de propietario" })
+    .getByRole("button", { name: "Empezar mi prueba gratuita" })
     .click();
   await expect(page).toHaveURL(/setup/);
   await page.getByLabel("Nombre del gimnasio").fill("Gimnasio E2E");
