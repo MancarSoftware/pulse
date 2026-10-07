@@ -2305,3 +2305,8 @@ summary {
     flex-wrap: wrap;
   }
 }
+
+.brand-mark {
+  width: 32px;
+  height: 32px;
+}

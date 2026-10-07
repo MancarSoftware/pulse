@@ -1,0 +1,347 @@
+.marketing {
+  background: #f7f8f3;
+}
+.marketing-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 26px max(5vw, 20px);
+  background: var(--nav);
+}
+.marketing-header nav {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+.marketing-header nav > a:not(.button) {
+  color: #e7efef;
+  font-weight: 600;
+}
+.marketing-hero {
+  display: grid;
+  grid-template-columns: 1.2fr 0.85fr;
+  gap: clamp(32px, 6vw, 96px);
+  padding: 45px max(5vw, 20px) 72px;
+  background: var(--nav);
+  color: white;
+}
+.marketing-hero-copy {
+  padding-top: 28px;
+}
+.marketing-hero .eyebrow {
+  color: var(--lime);
+  letter-spacing: 1.8px;
+}
+.marketing-hero h1 {
+  font-size: clamp(44px, 5.4vw, 82px);
+  line-height: 1.03;
+  letter-spacing: -3px;
+  margin: 24px 0;
+}
+.marketing-hero h1 em {
+  color: var(--lime);
+  font-style: normal;
+}
+.marketing-lead {
+  font-size: clamp(17px, 1.5vw, 22px);
+  color: #d1dfe0;
+  max-width: 530px;
+  line-height: 1.6;
+}
+.marketing-text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 15px;
+  color: var(--lime);
+  font-weight: 650;
+  padding: 8px 0;
+}
+.marketing-text-link span {
+  font-size: 23px;
+  transition: transform 180ms;
+}
+.marketing-text-link:hover span {
+  transform: translate(2px, -2px);
+}
+.marketing-access-flow {
+  margin-top: 60px;
+  border-top: 1px solid #536a70;
+  padding-top: 22px;
+  max-width: 550px;
+}
+.marketing-access-flow p {
+  font-size: 10px;
+  color: #aebfc2;
+  letter-spacing: 1.5px;
+}
+.marketing-access-flow div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.marketing-access-flow b,
+.marketing-access-flow strong {
+  color: var(--lime);
+}
+.marketing-access-flow small {
+  color: #aebfc2;
+}
+.marketing-signup {
+  background: white;
+  color: var(--ink);
+  padding: clamp(24px, 3vw, 40px);
+  border-radius: 14px;
+  scroll-margin-top: 24px;
+}
+.marketing-trial-number {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  padding-bottom: 18px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+}
+.marketing-trial-number strong {
+  font-size: 56px;
+  letter-spacing: -3px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+.marketing-trial-number span {
+  color: var(--muted);
+  font-size: 13px;
+}
+.marketing-signup h2 {
+  font-size: 22px;
+}
+.marketing-signup > p {
+  color: var(--muted);
+  font-size: 13px;
+}
+.marketing-signup .auth-form {
+  margin: 24px 0 14px;
+}
+.marketing-signup > small {
+  display: block;
+  line-height: 1.6;
+}
+.marketing-signup .marketing-existing {
+  margin: 18px 0 0;
+}
+.marketing-features,
+.marketing-pricing {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: clamp(30px, 8vw, 120px);
+  padding: 80px max(5vw, 20px);
+  scroll-margin-top: 24px;
+}
+.marketing-section-intro h2 {
+  font-size: clamp(28px, 3vw, 42px);
+  line-height: 1.12;
+  letter-spacing: -1.4px;
+}
+.marketing-section-intro > p:not(.eyebrow) {
+  max-width: 400px;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.75;
+}
+.marketing-feature-list article {
+  display: grid;
+  grid-template-columns: 35px 1fr;
+  gap: 25px;
+  padding: 23px 0;
+  border-top: 1px solid #c6d2d0;
+}
+.marketing-feature-list article > span {
+  color: var(--accent);
+  font-weight: 750;
+  padding-top: 3px;
+}
+.marketing-feature-list h3 {
+  font-size: 19px;
+  margin-bottom: 8px;
+}
+.marketing-feature-list p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.marketing-continuity {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  padding: 60px max(5vw, 20px);
+  background: #deebe5;
+  border-block: 1px solid #c4d7cd;
+}
+.marketing-continuity h2 {
+  font-size: clamp(28px, 3vw, 42px);
+  letter-spacing: -1.4px;
+  line-height: 1.14;
+  margin-bottom: 0;
+}
+.marketing-continuity p:not(.eyebrow) {
+  font-size: 16px;
+  color: #38534c;
+  line-height: 1.7;
+}
+.marketing-continuity .marketing-text-link {
+  color: #076b60;
+}
+.marketing-price-list article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 23px 0;
+  border-bottom: 1px solid #c6d2d0;
+}
+.marketing-price-list article:first-child {
+  border-top: 1px solid #c6d2d0;
+}
+.marketing-price-list h3 {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+.marketing-price-list p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+.marketing-price-list article > div:last-child {
+  text-align: right;
+}
+.marketing-price-list strong {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -1px;
+}
+.marketing-price-list small {
+  display: block;
+}
+.marketing-pricing-note {
+  padding-top: 22px;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.marketing-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 28px max(5vw, 20px);
+  border-top: 1px solid #c6d2d0;
+}
+.marketing-footer p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+@media (min-width: 1600px) {
+  .marketing-header,
+  .marketing-hero,
+  .marketing-features,
+  .marketing-pricing,
+  .marketing-continuity,
+  .marketing-footer {
+    padding-inline: max(5vw, calc((100vw - 1440px) / 2));
+  }
+}
+@media (max-width: 1000px) {
+  .marketing-hero {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  .marketing-hero h1 {
+    font-size: clamp(40px, 5.3vw, 64px);
+    letter-spacing: -2px;
+  }
+  .marketing-header nav {
+    gap: 18px;
+  }
+  .marketing-nav-feature {
+    display: none;
+  }
+  .marketing-access-flow {
+    margin-top: 35px;
+  }
+  .marketing-continuity {
+    gap: 36px;
+  }
+}
+@media (max-width: 700px) {
+  .marketing-header {
+    flex-wrap: wrap;
+    padding-block: 18px;
+    gap: 16px;
+  }
+  .marketing-header nav {
+    width: 100%;
+    gap: 16px;
+    justify-content: space-between;
+    font-size: 12px;
+  }
+  .marketing-nav-trial {
+    min-height: 44px;
+    font-size: 12px;
+    padding: 9px 13px;
+  }
+  .marketing-hero {
+    grid-template-columns: 1fr;
+    padding-top: 18px;
+    padding-bottom: 36px;
+    gap: 32px;
+  }
+  .marketing-hero-copy {
+    padding-top: 0;
+  }
+  .marketing-hero h1 {
+    font-size: clamp(43px, 9vw, 61px);
+  }
+  .marketing-access-flow {
+    margin-top: 24px;
+  }
+  .marketing-hero .eyebrow {
+    font-size: 9px;
+    letter-spacing: 1.25px;
+  }
+  .marketing-signup {
+    padding: 24px;
+  }
+  .marketing-features,
+  .marketing-pricing {
+    grid-template-columns: 1fr;
+    padding-block: 44px;
+    gap: 28px;
+  }
+  .marketing-continuity {
+    grid-template-columns: 1fr;
+    padding-block: 36px;
+    gap: 24px;
+  }
+  .marketing-feature-list article {
+    gap: 13px;
+    padding: 20px 0;
+  }
+  .marketing-price-list strong {
+    font-size: 28px;
+  }
+  .marketing-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 15px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marketing-text-link span {
+    transition: none;
+  }
+}

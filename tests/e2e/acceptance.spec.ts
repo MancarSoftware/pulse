@@ -26,10 +26,10 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
     .getByRole("button", { name: "Crear cuenta de propietario" })
     .click();
   await expect(page).toHaveURL(/setup/);
-  await page.getByLabel("Nombre del gimnasio").fill("MANCAR Fitness Test");
+  await page.getByLabel("Nombre del gimnasio").fill("Gymora Fitness Test");
   await page.getByLabel("Primera sucursal").fill("Quito Centro");
   await page.getByRole("button", { name: "Crear mi organización" }).click();
-  await expect(page).toHaveURL(/subscription/);
+  await expect(page).toHaveURL(/dashboard/);
   const testOwner = await db.user.findUniqueOrThrow({
     where: { email },
     include: { staff: true },
@@ -274,7 +274,7 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
   await otherPage
     .getByRole("button", { name: "Crear mi organización" })
     .click();
-  await expect(otherPage).toHaveURL(/subscription/);
+  await expect(otherPage).toHaveURL(/dashboard/);
   const otherOwner = await db.user.findUniqueOrThrow({
     where: { email: otherEmail },
     include: { staff: true },

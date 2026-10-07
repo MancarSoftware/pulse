@@ -2,6 +2,22 @@ import { expect, it } from "vitest";
 import { subscriptionStatus } from "@/modules/billing/status";
 import { saasRenewalWindow } from "@/modules/billing/schedule";
 import { dayStart } from "@/shared/dates";
+it("ends a 48-hour private trial at its exact deadline without unpaid grace", () => {
+  const subscription = {
+    trialEndsAt: new Date("2026-10-09T22:45:00Z"),
+    paidUntil: null,
+    graceDays: 1,
+  };
+  expect(
+    subscriptionStatus(subscription, new Date("2026-10-09T22:44:59Z")).state,
+  ).toBe("TRIAL");
+  expect(subscriptionStatus(subscription, subscription.trialEndsAt).state).toBe(
+    "SUSPENDED",
+  );
+  expect(
+    subscriptionStatus(subscription, new Date("2026-10-10T00:00:00Z")).allowed,
+  ).toBe(false);
+});
 it("requires initial payment, permits exactly one local calendar day of grace, then suspends", () => {
   const subscription = {
     trialEndsAt: dayStart("2026-09-01"),

@@ -126,7 +126,7 @@ model PlatformAudit {
 }
 model SaaSBillingSettings {
   id String @id @default("main")
-  trialDays Int @default(0)
+  trialDays Int @default(2)
   graceDays Int @default(1)
   paymentInstructions String @default("")
   updatedAt DateTime @updatedAt

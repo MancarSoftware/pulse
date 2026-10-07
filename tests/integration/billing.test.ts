@@ -44,10 +44,16 @@ async function arrange() {
   const ctx = await fixture(),
     other = await fixture();
   await db.platformAdmin.create({ data: { userId: other.userId } });
+  await db.saaSSubscription.updateMany({
+    where: {
+      organizationId: { in: [ctx.organizationId, other.organizationId] },
+    },
+    data: { trialEndsAt: new Date(Date.now() - 1) },
+  });
   await db.saaSBillingSettings.update({
     where: { id: "main" },
     data: {
-      trialDays: 0,
+      trialDays: 2,
       graceDays: 1,
       paymentInstructions: "Test only. No actual payments.",
     },
@@ -78,6 +84,54 @@ function approval(paymentId: string) {
     note: "Received full payment in bank statement",
   };
 }
+it("creates an isolated 48-hour trial and keeps its member data through expiry and paid activation", async () => {
+  const { admin, plan } = await arrange();
+  const before = Date.now();
+  const ctx = await fixture();
+  const subscription = await db.saaSSubscription.findUniqueOrThrow({
+    where: { organizationId: ctx.organizationId },
+  });
+  const remaining = subscription.trialEndsAt.getTime() - before;
+  expect(remaining).toBeGreaterThanOrEqual(48 * 60 * 60 * 1000);
+  expect(remaining).toBeLessThan(48 * 60 * 60 * 1000 + 10000);
+  expect((await subscriptionAccess(ctx.organizationId)).state).toBe("TRIAL");
+  const member = await db.member.create({
+    data: {
+      organizationId: ctx.organizationId,
+      branchId: ctx.branchId,
+      firstName: "Private",
+      lastName: "Trial",
+      phone: "0991000001",
+    },
+  });
+  await expect(
+    setupOrganization(ctx.userId, { name: "Reset", branchName: "Reset" }),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+  expect(
+    (
+      await db.saaSSubscription.findUniqueOrThrow({
+        where: { organizationId: ctx.organizationId },
+      })
+    ).trialEndsAt,
+  ).toEqual(subscription.trialEndsAt);
+  await db.saaSSubscription.update({
+    where: { organizationId: ctx.organizationId },
+    data: { trialEndsAt: new Date(Date.now() - 1) },
+  });
+  await expect(requireSubscription(ctx.organizationId)).rejects.toMatchObject({
+    code: "SUBSCRIPTION_SUSPENDED",
+  });
+  expect(
+    await db.member.findUnique({ where: { id: member.id } }),
+  ).not.toBeNull();
+  const payment = await submitSubscriptionPayment(ctx, submission(plan.id));
+  await reviewSubscriptionPayment(admin, approval(payment.id));
+  expect((await subscriptionAccess(ctx.organizationId)).state).toBe("ACTIVE");
+  expect(
+    (await db.member.findUniqueOrThrow({ where: { id: member.id } }))
+      .organizationId,
+  ).toBe(ctx.organizationId);
+});
 it("keeps unpaid gyms suspended and separates platform permissions from gym ownership", async () => {
   const { ctx, plan } = await arrange();
   expect((await subscriptionAccess(ctx.organizationId)).state).toBe(

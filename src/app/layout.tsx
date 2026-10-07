@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 export const metadata: Metadata = {
-  title: "MANCAR Gym",
+  title: "Gymora",
   description: "Operación y administración de gimnasios",
   robots: { index: false, follow: false },
 };

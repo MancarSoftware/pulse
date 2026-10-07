@@ -1,3 +1,4 @@
+import { Brand } from "@/components/brand";
 import Link from "next/link";
 import { AuthForm } from "@/components/auth-form";
 export default function LoginPage() {
@@ -5,7 +6,7 @@ export default function LoginPage() {
     <main className="auth-layout">
       <section className="auth-story">
         <Link className="wordmark" href="/">
-          MANCAR<span>GYM</span>
+          <Brand />
         </Link>
         <div>
           <p className="eyebrow">TU GIMNASIO. EN ORDEN.</p>
@@ -20,7 +21,7 @@ export default function LoginPage() {
             Una operación conectada de principio a fin.
           </p>
         </div>
-        <small>MANCAR SOFTWARE · Gestión para gimnasios</small>
+        <small>Gymora · Gestión para gimnasios</small>
       </section>
       <section className="auth-panel">
         <div>

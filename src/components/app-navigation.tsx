@@ -1,4 +1,5 @@
 "use client";
+import { Brand } from "@/components/brand";
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Icon } from "./icon";
@@ -10,7 +11,7 @@ export function AppNavigation({ children }: { children: React.ReactNode }) {
       <aside className="sidebar desktop-sidebar">{children}</aside>
       <div className="mobile-header">
         <span className="wordmark">
-          MANCAR<span>GYM</span>
+          <Brand />
         </span>
         <Dialog.Root open={open} onOpenChange={setOpen}>
           <Dialog.Trigger className="mobile-menu-button">

@@ -1,6 +1,8 @@
-# MANCAR Gym
+# Gymora
 
 Las suscripciones de gimnasios a la plataforma se administran por separado de las membresías de socios. Consulta [facturación SaaS](docs/saas-billing.md) para publicar precios, verificar pagos manuales y administrar suspensión y renovación sin eliminar datos.
+
+Página pública de Gymora con registro y prueba privada de 48 horas desde la creación del gimnasio. Los datos pertenecen a la misma organización durante prueba, suspensión y activación de pago; nunca se copian a otra cuenta.
 
 Aplicación multiempresa para gimnasios en Ecuador: socios, planes configurables, membresías, cobros, recepción QR, pases diarios, POS, inventario, gastos y reportes. USD y recibos internos; **no incluye facturación fiscal ni procesamiento de tarjetas**. Los pagos registran cobros que el empleado ya recibió.
 

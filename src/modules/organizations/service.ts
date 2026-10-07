@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { serializable } from "@/infrastructure/db";
 import { AppError } from "@/shared/errors";
-import { addDays, dayStart, localDate } from "@/shared/dates";
+import { addDays } from "@/shared/dates";
 export const setupSchema = z
   .object({
     name: z.string().trim().min(2).max(100),
@@ -28,7 +28,7 @@ export async function setupOrganization(userId: string, input: unknown) {
       data: {
         organizationId: organization.id,
         trialEndsAt: billing.trialDays
-          ? addDays(dayStart(localDate()), billing.trialDays)
+          ? addDays(new Date(), billing.trialDays)
           : new Date(),
         graceDays: billing.graceDays,
       },

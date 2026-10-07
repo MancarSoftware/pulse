@@ -38,7 +38,7 @@ export function AuthForm({ register = false }: { register?: boolean }) {
     }
   }
   return (
-    <form onSubmit={submit} className="auth-form">
+    <form method="post" onSubmit={submit} className="auth-form">
       {register && (
         <label>
           Nombre completo

@@ -1,10 +1,10 @@
-# Suscripciones comerciales de MANCAR
+# Suscripciones comerciales de Gymora
 
 Esta facturación pertenece a la plataforma SaaS. No utiliza ni incrementa el libro de movimientos, productos, planes de socios o caja de un gimnasio.
 
 ## Política inicial
 
-- Sin prueba gratuita. Un gimnasio nuevo debe informar un pago y recibir aprobación antes de usar la operación normal.
+- Prueba privada de dos días (48 horas completas) desde la creación de un gimnasio nuevo. No solicita tarjeta ni genera pagos. Cada organización conserva su fecha de fin; recargar la página o volver a configurar no reinicia la prueba.
 - Al vencer una suscripción pagada, hay un día calendario de gracia en Ecuador. Después se bloquean las páginas y API operativas, incluyendo fotos y credenciales. Los mensajes WhatsApp pendientes se pausan.
 - El propietario conserva acceso a `/subscription` para informar pagos, revisar el resultado y cerrar sesión. Los empleados ven una explicación y deben contactar al propietario.
 - La suspensión no borra socios, contratos, movimientos ni usuarios. Una aprobación restaura el acceso en la siguiente solicitud. No se requiere un cron para determinar vencimientos.
@@ -13,7 +13,7 @@ Esta facturación pertenece a la plataforma SaaS. No utiliza ni incrementa el li
 
 ## Activación comercial
 
-1. Aplicar `npm run db:deploy`. Las cuentas existentes sin pagos SaaS quedan pendientes de activación; sus registros permanecen almacenados. No se genera ningún pago ficticio ni una prueba gratuita.
+1. Aplicar `npm run db:deploy`. Las cuentas existentes sin pagos SaaS quedan pendientes de activación; sus registros permanecen almacenados. No se genera ningún pago ficticio ni se extiende retroactivamente el acceso de organizaciones existentes.
 2. Crear una cuenta y conceder acceso de plataforma desde un terminal autorizado: `npm run platform:admin -- --email cuenta@ejemplo.com`. Para revocar: agregar `--revoke`. Esto no crea usuarios ni depende del rol OWNER de un gimnasio; el cambio se audita. No ejecutar para cuentas no autorizadas.
 3. Iniciar sesión y abrir `/platform`. En **Planes SaaS** están publicados Mensual ($25), Trimestral ($70) y Semestral ($135); el precio representa el período completo. Solo se permiten 1, 3 y 6 meses. Los planes anuales históricos quedan despublicados y sus pagos se conservan. No hay límites por tier en esta versión.
 4. En **Datos de pago**, publicar instrucciones reales (banco, titular, cuenta y referencia). No guardar claves bancarias. Los pagos permanecen deshabilitados si no hay plan publicado o instrucciones.

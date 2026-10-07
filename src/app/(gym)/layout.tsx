@@ -1,3 +1,4 @@
+import { Brand } from "@/components/brand";
 import Link from "next/link";
 import { pageContext } from "@/lib/page-context";
 import { db } from "@/infrastructure/db";
@@ -7,7 +8,7 @@ import { NavLink } from "@/components/nav-link";
 import { AppNavigation } from "@/components/app-navigation";
 import { Icon } from "@/components/icon";
 import { subscriptionAccess } from "@/modules/billing/access";
-import { formatDate, remainingDays } from "@/shared/dates";
+import { formatDate, formatDateTime, remainingDays } from "@/shared/dates";
 export default async function GymLayout({
   children,
 }: {
@@ -28,10 +29,12 @@ export default async function GymLayout({
       </a>
       <AppNavigation>
         <Link href="/dashboard" className="wordmark">
-          MANCAR<span>GYM</span>
+          <Brand />
         </Link>
         <div className="organization">
-          <span className="org-icon">M</span>
+          <span className="org-icon">
+            {organization.name.slice(0, 1).toUpperCase()}
+          </span>
           <div>
             <strong>{organization.name}</strong>
             <small>
@@ -83,7 +86,7 @@ export default async function GymLayout({
               <br />A mover tu gimnasio.
             </strong>
           </div>
-          <small>MANCAR · GESTIÓN EN MOVIMIENTO</small>
+          <small>Gymora · GESTIÓN EN MOVIMIENTO</small>
           <Logout />
         </div>
       </AppNavigation>
@@ -108,12 +111,15 @@ export default async function GymLayout({
           </div>
         </header>
         <main id="main">
-          {(subscription.state === "GRACE" ||
+          {(subscription.state === "TRIAL" ||
+            subscription.state === "GRACE" ||
             (subscription.endAt && remainingDays(subscription.endAt) <= 7)) && (
             <div className="notice warning" role="status">
-              {subscription.state === "GRACE"
-                ? `Pago pendiente. El acceso se suspende al finalizar el ${formatDate(new Date(subscription.graceEndsAt!.getTime() - 1))}.`
-                : `La suscripción de MANCAR vence al finalizar el ${formatDate(new Date(subscription.endAt!.getTime() - 1))}.`}
+              {subscription.state === "TRIAL"
+                ? `Tu prueba privada termina el ${formatDateTime(subscription.endAt!)} (hora de Ecuador). Al activar un plan conservas tus datos.`
+                : subscription.state === "GRACE"
+                  ? `Pago pendiente. El acceso se suspende al finalizar el ${formatDate(new Date(subscription.graceEndsAt!.getTime() - 1))}.`
+                  : `La suscripción de Gymora vence al finalizar el ${formatDate(new Date(subscription.endAt!.getTime() - 1))}.`}
               {ctx.role === "OWNER" ? (
                 <Link href="/subscription"> Revisar mi suscripción →</Link>
               ) : (

@@ -37,7 +37,7 @@ export default async function Receipt({
   });
   return (
     <section className="panel narrow">
-      <p className="eyebrow">MANCAR GYM · RECIBO INTERNO</p>
+      <p className="eyebrow">GYMORA · RECIBO INTERNO</p>
       <h1>{organization.name}</h1>
       <p>
         {entry.branch.name} · {formatDate(entry.occurredAt)}

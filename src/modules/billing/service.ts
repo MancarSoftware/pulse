@@ -12,6 +12,7 @@ import {
   name,
   nonnegativeAmount,
 } from "@/shared/schemas";
+import { TRIAL_DAYS } from "@/shared/brand";
 import { saasRenewalWindow } from "./schedule";
 
 export function billingOwner(ctx: Context) {
@@ -71,7 +72,7 @@ export async function submitSubscriptionPayment(ctx: Context, input: unknown) {
     if (!settings.paymentInstructions.trim())
       throw new AppError(
         "BILLING_SETUP",
-        "MANCAR todavía debe publicar las instrucciones de pago.",
+        "Gymora todavía debe publicar las instrucciones de pago.",
         409,
       );
     const plan = requireFound(
@@ -332,7 +333,7 @@ export async function saveBillingSettings(userId: string, input: unknown) {
       );
     await tx.saaSBillingSettings.update({
       where: { id: "main" },
-      data: { ...data, trialDays: 0 },
+      data: { ...data, trialDays: TRIAL_DAYS },
     });
     await tx.platformAudit.create({
       data: {
@@ -344,7 +345,7 @@ export async function saveBillingSettings(userId: string, input: unknown) {
     });
     return {
       message:
-        "Instrucciones actualizadas. Se mantiene un día de gracia y no se ofrecen pruebas gratuitas.",
+        "Instrucciones actualizadas. Prueba privada de dos días; un día de gracia solo después de una suscripción pagada.",
     };
   });
 }

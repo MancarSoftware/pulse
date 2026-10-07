@@ -6,7 +6,7 @@ export async function requirePlatformAdmin(userId: string) {
   if (!admin?.active)
     throw new AppError(
       "FORBIDDEN",
-      "Solo la administración de MANCAR puede revisar suscripciones.",
+      "Solo la administración de Gymora puede revisar suscripciones.",
       403,
     );
 }

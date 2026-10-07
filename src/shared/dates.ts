@@ -59,3 +59,11 @@ export function formatDate(value: string | Date) {
     dateStyle: "medium",
   }).format(new Date(value));
 }
+
+export function formatDateTime(value: Date) {
+  return new Intl.DateTimeFormat("es-EC", {
+    timeZone: "America/Guayaquil",
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(value);
+}

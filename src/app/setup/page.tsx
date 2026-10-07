@@ -14,6 +14,11 @@ export default async function Setup() {
         <p className="eyebrow">CONFIGURACIÓN INICIAL</p>
         <h1>Tu gimnasio empieza aquí</h1>
         <p>Moneda USD · Ecuador continental · recibos internos</p>
+        <p className="notice">
+          Al crear tu gimnasio comienzan tus 48 horas de prueba privada.
+          Registra tus propios datos: seguirán en esta cuenta cuando actives un
+          plan.
+        </p>
         <OperationForm
           endpoint="/api/setup"
           redirectTo="/dashboard"

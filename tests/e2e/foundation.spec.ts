@@ -6,9 +6,11 @@ test.afterAll(async () => {
 test("owner creates organization, opens protected data and logs out", async ({
   page,
 }) => {
-  await page.goto("/dashboard");
-  await expect(page).toHaveURL(/login/);
-  await page.getByRole("link", { name: "Crear organización" }).click();
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { name: "Tu gimnasio, en movimiento." }),
+  ).toBeVisible();
+  await expect(page).toHaveTitle(/Gymora/);
   await page.getByLabel("Nombre completo").fill("Propietario de prueba");
   const email = `owner-${crypto.randomUUID()}@example.test`;
   const password = `Test-${crypto.randomUUID()}!`;
@@ -21,10 +23,28 @@ test("owner creates organization, opens protected data and logs out", async ({
   await page.getByLabel("Nombre del gimnasio").fill("Gimnasio E2E");
   await page.getByLabel("Primera sucursal").fill("Sucursal central");
   await page.getByRole("button", { name: "Crear mi organización" }).click();
+  await expect(page).toHaveURL(/dashboard/);
+  await expect(page.getByText(/Tu prueba privada termina/)).toBeVisible();
+  const testOwner = await db.user.findUniqueOrThrow({
+    where: { email },
+    include: { staff: true },
+  });
+  const savedMember = await db.member.create({
+    data: {
+      organizationId: testOwner.staff!.organizationId,
+      branchId: testOwner.staff!.branchId,
+      firstName: "Trial",
+      lastName: "Saved",
+      phone: "0991000001",
+    },
+  });
+  await db.saaSSubscription.update({
+    where: { organizationId: testOwner.staff!.organizationId },
+    data: { trialEndsAt: new Date(Date.now() - 1) },
+  });
+  await page.goto("/dashboard");
   await expect(page).toHaveURL(/subscription/);
-  await expect(
-    page.getByText("No hay pagos aprobados.", { exact: false }),
-  ).toBeVisible();
+  await expect(page.getByText(/Tu prueba ha finalizado/)).toBeVisible();
   const blocked = await page.request.post("/api/gym/catalog", {
     headers: { origin: "http://localhost:3000" },
     data: { kind: "service", name: "Unpaid request" },
@@ -44,7 +64,6 @@ test("owner creates organization, opens protected data and logs out", async ({
     },
   );
   expect(cannotApproveOwnPayment.status()).toBe(403);
-  const testOwner = await db.user.findUniqueOrThrow({ where: { email } });
   await db.platformAdmin.create({ data: { userId: testOwner.id } });
   const plan = await db.saaSPlan.create({
     data: {
@@ -96,6 +115,9 @@ test("owner creates organization, opens protected data and logs out", async ({
     .click();
   await expect(paymentRow).toHaveCount(0);
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(
+    await db.member.findUnique({ where: { id: savedMember.id } }),
+  ).not.toBeNull();
   await page.goto("/dashboard");
   await expect(
     page.getByRole("heading", { name: "Tu jornada, en un vistazo." }),

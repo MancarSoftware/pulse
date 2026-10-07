@@ -32,7 +32,7 @@ export default async function PlatformPage({
           <section className="panel">
             <h1>Acceso restringido</h1>
             <p>
-              Esta sección pertenece a la administración de MANCAR. Ser
+              Esta sección pertenece a la administración de Gymora. Ser
               propietario de un gimnasio no concede acceso a pagos de otros
               clientes.
             </p>
@@ -82,7 +82,7 @@ export default async function PlatformPage({
     content = (
       <section className="panel">
         <div className="section-heading">
-          <h2>Planes de MANCAR</h2>
+          <h2>Planes de Gymora</h2>
           <Modal title="Nuevo plan SaaS" trigger="Nuevo plan">
             <OperationForm endpoint="/api/platform/plans" fields={fields} />
           </Modal>
@@ -148,8 +148,9 @@ export default async function PlatformPage({
           verificación manual.
         </p>
         <p className="notice">
-          Sin prueba gratuita. La gracia empieza cuando vence una suscripción ya
-          pagada: un día calendario. Renovaciones el 30 (último día en febrero).
+          Prueba privada de dos días para nuevos gimnasios. La gracia empieza
+          cuando vence una suscripción ya pagada: un día calendario.
+          Renovaciones el 30 (último día en febrero).
         </p>
         <OperationForm
           endpoint="/api/platform/settings"
@@ -413,7 +414,7 @@ export default async function PlatformPage({
       <div className="page-heading">
         <div>
           <p className="eyebrow">ADMINISTRACIÓN DE LA PLATAFORMA</p>
-          <h1>Suscripciones MANCAR</h1>
+          <h1>Suscripciones Gymora</h1>
           <p className="muted">
             {pendingCount} pagos pendientes de verificar. Los cobros de los
             socios permanecen dentro de cada gimnasio.

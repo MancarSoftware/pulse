@@ -1,3 +1,4 @@
+import { Brand } from "@/components/brand";
 import Link from "next/link";
 import { Logout } from "./auth-form";
 export function BillingShell({
@@ -14,7 +15,7 @@ export function BillingShell({
       </a>
       <header className="billing-header">
         <Link href="/dashboard" className="wordmark">
-          MANCAR<span>GYM</span>
+          <Brand />
         </Link>
         <nav aria-label="Facturación">
           <Link href="/subscription">Mi suscripción</Link>
@@ -23,7 +24,7 @@ export function BillingShell({
         </nav>
       </header>
       <main id="main">{children}</main>
-      <footer>MANCAR · Suscripciones del sistema · USD</footer>
+      <footer>Gymora · Suscripciones del sistema · USD</footer>
     </div>
   );
 }

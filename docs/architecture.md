@@ -1,4 +1,4 @@
-# MANCAR Gym — decisiones y entrega
+# Gymora — decisiones y entrega
 
 ## Reglas confirmadas
 

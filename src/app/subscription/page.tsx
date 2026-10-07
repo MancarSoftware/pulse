@@ -5,7 +5,7 @@ import { db } from "@/infrastructure/db";
 import { ownerBilling } from "@/modules/billing/service";
 import { subscriptionAccess } from "@/modules/billing/access";
 import { subscriptionLabels } from "@/modules/billing/status";
-import { formatDate } from "@/shared/dates";
+import { formatDate, formatDateTime } from "@/shared/dates";
 import { formatMoney } from "@/shared/money";
 import { Modal } from "@/components/modal";
 import { OperationForm } from "@/components/operation-form";
@@ -35,7 +35,7 @@ export default async function SubscriptionPage({
           </h1>
           <p>
             El propietario de {organization.name} debe revisar la suscripción de
-            MANCAR. Tus datos se conservan.
+            Gymora. Tus datos se conservan.
           </p>
           {status.allowed && (
             <Link className="button" href="/dashboard">
@@ -57,7 +57,7 @@ export default async function SubscriptionPage({
           <p className="eyebrow">EL SISTEMA DE TU GIMNASIO</p>
           <h1>Mi suscripción</h1>
           <p className="muted">
-            {organization.name} · Acceso a MANCAR, separado de las membresías de
+            {organization.name} · Acceso a Gymora, separado de las membresías de
             tus socios.
           </p>
         </div>
@@ -77,11 +77,18 @@ export default async function SubscriptionPage({
           >
             {subscriptionLabels[status.state]}
           </span>
-          <h2>{data.subscription?.plan?.name ?? "Pendiente de activar"}</h2>
+          <h2>
+            {data.subscription?.plan?.name ??
+              (status.state === "TRIAL"
+                ? "Tu prueba privada de Gymora"
+                : "Activa un plan para continuar")}
+          </h2>
           <p>
             {data.subscription?.paidUntil
               ? `Pagada hasta el ${formatDate(new Date(data.subscription.paidUntil.getTime() - 1))}, inclusive.`
-              : "No hay pagos aprobados. La cuenta se activa después de verificar el primer pago."}
+              : status.state === "TRIAL"
+                ? `Puedes usar el sistema hasta el ${formatDateTime(status.endAt!)} (hora de Ecuador).`
+                : "Tu prueba ha finalizado o no hay un período pagado vigente. Activa un plan para continuar con tus mismos datos."}
           </p>
           {data.subscription?.paidUntil && (
             <p>Próxima renovación: {formatDate(data.subscription.paidUntil)}</p>
@@ -101,7 +108,11 @@ export default async function SubscriptionPage({
           )}
         </div>
         <div className="billing-policy">
-          <strong>Sin prueba gratuita</strong>
+          <strong>Prueba privada de 2 días</strong>
+          <span>
+            48 horas desde que creas tu gimnasio. Al pagar, conservas esta misma
+            cuenta y tus datos.
+          </span>
           <span>
             {data.subscription?.graceDays ?? data.settings.graceDays} día de
             gracia después de una suscripción pagada
@@ -114,7 +125,7 @@ export default async function SubscriptionPage({
       {pending && (
         <p className="notice warning" role="status">
           Tu pago está pendiente de revisión. La suscripción se actualizará
-          cuando MANCAR confirme que recibió el dinero.
+          cuando Gymora confirme que recibió el dinero.
         </p>
       )}
       <section className="panel">
@@ -129,12 +140,12 @@ export default async function SubscriptionPage({
           </p>
         ) : (
           <p className="notice warning">
-            MANCAR todavía debe publicar sus instrucciones de pago. No se han
+            Gymora todavía debe publicar sus instrucciones de pago. No se han
             configurado datos bancarios.
           </p>
         )}
         <p className="muted">
-          Realiza el pago del plan elegido e informa su referencia. MANCAR
+          Realiza el pago del plan elegido e informa su referencia. Gymora
           verifica el movimiento y te muestra el resultado aquí.
         </p>
       </section>
