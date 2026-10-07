@@ -53,7 +53,11 @@ export function TrialAccess({ children }: { children: ReactNode }) {
             <Dialog.Close className="trial-close" aria-label="Cerrar registro">
               <Icon name="close" />
             </Dialog.Close>
-            <AuthForm register registerLabel="Empezar mi prueba gratuita" />
+            <AuthForm
+              register
+              allowPasswordReveal
+              registerLabel="Empezar mi prueba gratuita"
+            />
             <p className="trial-note">
               Después configurarás tu gimnasio. Desde ese momento tienes 48
               horas de acceso. Al activar un plan, continúas con tus mismos

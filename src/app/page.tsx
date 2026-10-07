@@ -172,7 +172,10 @@ export default async function Home() {
           <h2 id="questions-title">Antes de empezar</h2>
           <div>
             <details>
-              <summary>¿Cuándo empieza la prueba?</summary>
+              <summary>
+                <span>¿Cuándo empieza la prueba?</span>
+                <Icon name="arrow" />
+              </summary>
               <p>
                 Primero creas tu cuenta y después configuras el gimnasio y su
                 primera sucursal. Al crear la organización empiezan las 48 horas
@@ -180,7 +183,10 @@ export default async function Home() {
               </p>
             </details>
             <details>
-              <summary>¿Qué pasa con los datos al activar un plan?</summary>
+              <summary>
+                <span>¿Qué pasa con los datos al activar un plan?</span>
+                <Icon name="arrow" />
+              </summary>
               <p>
                 Continúas en la misma cuenta, con tus socios, planes y
                 movimientos. Si la prueba termina antes de pagar, se pausa el
@@ -189,7 +195,10 @@ export default async function Home() {
               </p>
             </details>
             <details>
-              <summary>¿Cómo pago y renuevo?</summary>
+              <summary>
+                <span>¿Cómo pago y renuevo?</span>
+                <Icon name="arrow" />
+              </summary>
               <p>
                 Por ahora el pago se verifica manualmente; los cobros
                 automáticos aún no están habilitados. Las renovaciones se

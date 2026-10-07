@@ -39,6 +39,16 @@ test("owner creates organization, opens protected data and logs out", async ({
   const email = `owner-${crypto.randomUUID()}@example.test`;
   const password = `Test-${crypto.randomUUID()}!`;
   await page.getByLabel("Correo electrónico").fill(email);
+  await page.getByRole("button", { name: "Mostrar contraseña" }).click();
+  await expect(page.getByLabel("Contraseña", { exact: true })).toHaveAttribute(
+    "type",
+    "text",
+  );
+  await page.getByRole("button", { name: "Ocultar contraseña" }).click();
+  await expect(page.getByLabel("Contraseña", { exact: true })).toHaveAttribute(
+    "type",
+    "password",
+  );
   await page.getByLabel("Contraseña", { exact: true }).fill(password);
   await page
     .getByRole("button", { name: "Empezar mi prueba gratuita" })

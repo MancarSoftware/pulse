@@ -6,12 +6,15 @@ const client = createAuthClient();
 export function AuthForm({
   register = false,
   registerLabel = "Crear cuenta de propietario",
+  allowPasswordReveal = false,
 }: {
   register?: boolean;
   registerLabel?: string;
+  allowPasswordReveal?: boolean;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const router = useRouter();
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -67,11 +70,11 @@ export function AuthForm({
           maxLength={240}
         />
       </label>
-      <div>
+      <div className={allowPasswordReveal ? "password-field" : undefined}>
         <label htmlFor="password">Contraseña</label>
         <input
           id="password"
-          type="password"
+          type={passwordVisible ? "text" : "password"}
           name="password"
           required
           minLength={register ? 12 : 1}
@@ -79,6 +82,20 @@ export function AuthForm({
           autoComplete={register ? "new-password" : "current-password"}
           aria-describedby={register ? "password-help" : undefined}
         />
+        {allowPasswordReveal && (
+          <button
+            type="button"
+            className="password-reveal"
+            aria-label={
+              passwordVisible ? "Ocultar contraseña" : "Mostrar contraseña"
+            }
+            aria-controls="password"
+            aria-pressed={passwordVisible}
+            onClick={() => setPasswordVisible((value) => !value)}
+          >
+            {passwordVisible ? "Ocultar" : "Mostrar"}
+          </button>
+        )}
         {register && <small id="password-help">Al menos 12 caracteres.</small>}
       </div>
       {error && (

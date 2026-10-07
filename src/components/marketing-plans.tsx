@@ -42,10 +42,15 @@ export function MarketingPlans({ plans }: { plans: MarketingPlan[] }) {
         ))}
       </div>
       <div className="plan-summary" aria-live="polite" aria-atomic="true">
-        <p>{plan.name}</p>
+        <p>
+          <Icon name="check" />
+          {plan.name}
+        </p>
         <div className="plan-total">
           <strong>{plan.total}</strong>
-          <span>USD / período completo</span>
+          <span>
+            USD por {plan.months === 1 ? "1 mes" : `${plan.months} meses`}
+          </span>
         </div>
         <p className="plan-equivalent">
           {plan.months === 1
