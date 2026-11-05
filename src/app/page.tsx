@@ -25,6 +25,7 @@ export default async function Home() {
     },
     orderBy: { durationMonths: "asc" },
   });
+  const monthlyPlan = plans.find((plan) => plan.durationMonths === 1);
   return (
     <TrialAccess>
       <a className="skip" href="#main">
@@ -110,13 +111,66 @@ export default async function Home() {
             <p>
               Selecciona una función.
               <br />
-              Estas vistas usan datos de ejemplo.
+              Capturas reales con datos ficticios.
             </p>
           </div>
           <MarketingWalkthrough />
           <p className="marketing-product-note">
             También incluye inventario, sucursales y permisos para tu equipo.
           </p>
+        </section>
+        <section
+          className="marketing-trial-path"
+          aria-labelledby="trial-path-title"
+        >
+          <div>
+            <p className="marketing-section-label">
+              De la primera visita al primer socio
+            </p>
+            <h2 id="trial-path-title">
+              Prueba con tu gimnasio.
+              <br />
+              Sigue con tus datos.
+            </h2>
+            <p>
+              Tu prueba es privada. Cuando actives una suscripción, continúas en
+              la misma cuenta, sin volver a cargar tus registros.
+            </p>
+            <TrialButton className="marketing-text-link">
+              Empezar mis 2 días gratis <Icon name="arrow" />
+            </TrialButton>
+          </div>
+          <ol className="trial-path-steps">
+            <li>
+              <Icon name="members" />
+              <div>
+                <h3>Crea tu cuenta</h3>
+                <p>
+                  Registra tu nombre, correo y contraseña. No necesitas tarjeta.
+                </p>
+              </div>
+            </li>
+            <li>
+              <Icon name="settings" />
+              <div>
+                <h3>Configura tu gimnasio</h3>
+                <p>
+                  Agrega el nombre y la primera sucursal. Aquí empiezan tus 48
+                  horas de prueba.
+                </p>
+              </div>
+            </li>
+            <li>
+              <Icon name="check" />
+              <div>
+                <h3>Empieza a trabajar</h3>
+                <p>
+                  Una guía te ayuda a crear planes, registrar socios y cobrar su
+                  primera membresía.
+                </p>
+              </div>
+            </li>
+          </ol>
         </section>
         <section
           id="planes"
@@ -156,13 +210,22 @@ export default async function Home() {
             </small>
           </div>
           <MarketingPlans
-            plans={plans.map((plan) => ({
-              id: plan.id,
-              name: saasPeriodLabel(plan.durationMonths),
-              months: plan.durationMonths,
-              total: formatMoney(plan.price),
-              monthly: formatMoney(plan.price.dividedBy(plan.durationMonths)),
-            }))}
+            plans={plans.map((plan) => {
+              const savings = monthlyPlan?.price
+                .times(plan.durationMonths)
+                .minus(plan.price);
+              return {
+                id: plan.id,
+                name: saasPeriodLabel(plan.durationMonths),
+                months: plan.durationMonths,
+                total: formatMoney(plan.price),
+                monthly: formatMoney(plan.price.dividedBy(plan.durationMonths)),
+                savings:
+                  plan.durationMonths > 1 && savings?.greaterThan(0)
+                    ? formatMoney(savings)
+                    : null,
+              };
+            })}
           />
         </section>
         <section

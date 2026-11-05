@@ -10,6 +10,7 @@ export type MarketingPlan = {
   months: number;
   total: string;
   monthly: string;
+  savings: string | null;
 };
 
 export function MarketingPlans({ plans }: { plans: MarketingPlan[] }) {
@@ -57,6 +58,12 @@ export function MarketingPlans({ plans }: { plans: MarketingPlan[] }) {
             ? "Un mes de acceso al sistema."
             : `${plan.monthly} USD al mes, pagando el período completo.`}
         </p>
+        {plan.savings && (
+          <p className="plan-savings">
+            <Icon name="check" /> Ahorras {plan.savings} USD frente al pago
+            mensual.
+          </p>
+        )}
       </div>
       <TrialButton className="button plan-start">
         Probar antes de contratar <Icon name="arrow" />
@@ -65,6 +72,18 @@ export function MarketingPlans({ plans }: { plans: MarketingPlan[] }) {
         La prueba no genera un cobro ni contrata este plan. Podrás elegir tu
         suscripción desde tu cuenta.
       </p>
+      <div className="plan-payment-guide">
+        <strong>¿Cómo activo mi plan?</strong>
+        <p>
+          En Mi suscripción eliges un plan, consultas las instrucciones e
+          informas tu pago. Gymora verifica la recepción del dinero antes de
+          activar el período pagado.
+        </p>
+        <span>
+          Sin cobros automáticos. Si las instrucciones aún no están disponibles,
+          el pago permanecerá deshabilitado.
+        </span>
+      </div>
     </div>
   );
 }

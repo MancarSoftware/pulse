@@ -226,7 +226,7 @@ export default async function MemberProfile({
         </div>
         <div>
           {can(ctx.role, "payments:write") && (
-            <section className="panel">
+            <section className="panel" id="registrar-membresia">
               <p className="eyebrow">RENOVACIÓN / NUEVO CONTRATO</p>
               <h2>Registrar membresía</h2>
               <p className="muted">

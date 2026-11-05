@@ -76,6 +76,10 @@ Las contraseñas las procesa Better Auth/scrypt; cookies HTTP-only, SameSite, ex
 
 ## Migraciones y datos demo
 
+La página pública usa capturas reales con datos ficticios en `public/previews`. Para regenerarlas, primero crea el build y prepara `.env.test` con las migraciones aplicadas; ejecuta `npx tsx --env-file=.env.test scripts/capture-marketing.ts`. El script exige una base cuyo nombre termine en `_test`, inicia un servidor temporal en el puerto 3002 y crea un gimnasio de demostración independiente. No captura cuentas existentes ni usa información de clientes. Las imágenes WebP se guardan sin metadatos de sesión ni credenciales QR.
+
+El resumen de jornada muestra a los propietarios una guía de inicio basada en los registros de su organización: un plan habilitado con servicios activos, un socio activo y un pago de membresía sin reversión. El avance se consulta en el servidor, sin marcas manuales ni almacenamiento en el navegador; la guía desaparece cuando las tres tareas están completas.
+
 ```sh
 npm run db:migrate -- --name nombre_del_cambio  # desarrollo
 npm run db:deploy                             # despliegue

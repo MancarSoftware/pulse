@@ -18,16 +18,27 @@ test("owner creates organization, opens protected data and logs out", async ({
     page.getByRole("button", { name: /Trimestral/ }),
   ).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator(".plan-summary")).toContainText("Trimestral");
+  await expect(page.locator(".plan-savings")).toContainText("5,00");
+  await page.getByRole("button", { name: /Semestral/ }).click();
+  await expect(page.locator(".plan-savings")).toContainText("15,00");
+  await page.getByRole("button", { name: /Mensual/ }).click();
+  await expect(page.locator(".plan-savings")).toHaveCount(0);
+  await expect(page.locator(".plan-payment-guide")).toContainText(
+    "Sin cobros automáticos",
+  );
   await page.getByRole("tab", { name: "Membresías", exact: true }).click();
-  await expect(page.getByRole("tabpanel")).toContainText("1 mes calendario");
+  await expect(page.getByRole("tabpanel")).toContainText(
+    "1, 3 o 6 meses calendario",
+  );
+  await expect(page.getByRole("tabpanel").getByRole("img")).toBeVisible();
   await page
     .getByRole("tab", { name: "Membresías", exact: true })
     .press("ArrowRight");
   await expect(
-    page.getByRole("tab", { name: "Caja", exact: true }),
+    page.getByRole("tab", { name: "Resumen", exact: true }),
   ).toBeFocused();
   await expect(page.getByRole("tabpanel")).toContainText(
-    "Cobro y stock conectados",
+    "Empieza la jornada con lo que importa.",
   );
   await page.getByRole("link", { name: "Probar 2 días" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
@@ -59,6 +70,9 @@ test("owner creates organization, opens protected data and logs out", async ({
   await page.getByRole("button", { name: "Crear mi organización" }).click();
   await expect(page).toHaveURL(/dashboard/);
   await expect(page.getByText(/Tu prueba privada termina/)).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Deja listo tu gimnasio" }),
+  ).toContainText("0 de 3 completadas");
   const testOwner = await db.user.findUniqueOrThrow({
     where: { email },
     include: { staff: true },

@@ -222,9 +222,9 @@
 }
 .walkthrough-panel {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-columns: 1.65fr 0.85fr;
   align-items: center;
-  gap: 55px;
+  gap: 36px;
   padding: 32px;
 }
 .walkthrough-panel[hidden] {
@@ -248,6 +248,109 @@
   line-height: 1.8;
   margin-bottom: 20px;
 }
+.walkthrough-capture {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  margin: 0;
+  border: 1px solid #d9e4e1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f3f6f7;
+}
+.walkthrough-capture a {
+  display: block;
+  color: var(--accent);
+}
+.walkthrough-capture a:focus-visible {
+  outline-offset: -4px;
+}
+.walkthrough-capture img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.walkthrough-capture span {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 15px;
+  font-size: 12px;
+  font-weight: 600;
+  background: white;
+  border-top: 1px solid #d9e4e1;
+}
+.marketing-trial-path {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 90px;
+  padding: 45px var(--marketing-gutter) 55px;
+}
+.marketing-trial-path > div > p:not(.marketing-section-label) {
+  color: var(--marketing-muted);
+  max-width: 460px;
+  font-size: 14px;
+  line-height: 1.8;
+}
+.trial-path-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.trial-path-steps li {
+  display: flex;
+  gap: 18px;
+  padding: 17px 0;
+  border-bottom: 1px solid #d9e3e2;
+}
+.trial-path-steps li:first-child {
+  padding-top: 0;
+}
+.trial-path-steps > li > svg {
+  color: var(--accent);
+  margin-top: 3px;
+}
+.trial-path-steps h3 {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+.trial-path-steps p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--marketing-muted);
+  margin: 0;
+}
+.plan-savings {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  color: #225d48;
+  font-size: 12px;
+  margin: 12px 0 0;
+}
+.plan-savings svg {
+  width: 16px;
+  height: 16px;
+}
+.plan-payment-guide {
+  border-top: 1px solid #d9e4de;
+  padding-top: 17px;
+  margin-top: 18px;
+  font-size: 13px;
+}
+.plan-payment-guide p {
+  color: var(--marketing-muted);
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 7px 0;
+}
+.plan-payment-guide span {
+  display: block;
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--marketing-muted);
+}
 .marketing-text-link {
   display: inline-flex;
   align-items: center;
@@ -256,147 +359,6 @@
   color: var(--accent);
   font-size: 13px;
   font-weight: 650;
-}
-.walkthrough-screen {
-  grid-column: 1;
-  grid-row: 1;
-  border: 1px solid #dae4e1;
-  border-radius: 9px;
-  background: #fbfcfa;
-  min-height: 322px;
-  padding: 23px;
-}
-.walkthrough-screen-title {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 650;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #dde6df;
-}
-.walkthrough-screen-title svg {
-  color: var(--accent);
-  width: 17px;
-  height: 17px;
-}
-.walkthrough-status {
-  margin-left: auto;
-  padding: 4px 8px;
-  border-radius: 5px;
-  background: #e5f3eb;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--accent);
-}
-.walkthrough-member {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  padding: 22px 0;
-}
-.walkthrough-avatar {
-  display: grid;
-  place-items: center;
-  background: #e7eee8;
-  color: #426e51;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.walkthrough-member > div,
-.walkthrough-sale > div {
-  display: grid;
-  gap: 3px;
-}
-.walkthrough-member strong,
-.walkthrough-sale strong {
-  font-size: 14px;
-  font-weight: 600;
-}
-.walkthrough-member div > span,
-.walkthrough-sale div > span {
-  font-size: 11px;
-  color: var(--marketing-muted);
-}
-.walkthrough-member > svg {
-  margin-left: auto;
-  color: var(--accent);
-}
-.walkthrough-checks {
-  list-style: none;
-  margin: 0 0 22px;
-  padding: 0;
-  display: grid;
-  gap: 12px;
-}
-.walkthrough-checks li {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 12px;
-  color: var(--marketing-muted);
-}
-.walkthrough-checks svg {
-  width: 15px;
-  height: 15px;
-  color: var(--accent);
-}
-.walkthrough-result {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  background: #e5f3eb;
-  color: #225d48;
-  border-radius: 6px;
-}
-.walkthrough-result > div {
-  display: grid;
-  gap: 3px;
-}
-.walkthrough-result strong {
-  font-size: 13px;
-}
-.walkthrough-result span {
-  font-size: 11px;
-  line-height: 1.6;
-}
-.walkthrough-details {
-  margin: 0 0 22px;
-}
-.walkthrough-details > div {
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 8px 0;
-  font-size: 12px;
-  border-top: 1px solid #e5ebe5;
-}
-.walkthrough-details dt {
-  color: var(--marketing-muted);
-}
-.walkthrough-details dd {
-  margin: 0;
-  font-weight: 600;
-}
-.walkthrough-sale {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  padding: 24px 0;
-}
-.walkthrough-sale > svg {
-  width: 35px;
-  height: 35px;
-  color: var(--accent);
-}
-.walkthrough-sale > span {
-  font-size: 11px;
-  margin-left: auto;
-  color: var(--marketing-muted);
 }
 .walkthrough-disclaimer {
   display: block;
@@ -771,6 +733,7 @@
   .walkthrough-caption h3 {
     font-size: 22px;
   }
+  .marketing-trial-path,
   .marketing-pricing,
   .marketing-questions {
     gap: 45px;
@@ -809,9 +772,13 @@
     grid-row: 1;
     max-width: none;
   }
-  .walkthrough-screen {
+  .walkthrough-capture {
     grid-column: 1;
     grid-row: 2;
+  }
+  .marketing-trial-path {
+    grid-template-columns: 1fr;
+    gap: 25px;
   }
   .marketing-pricing {
     grid-template-columns: 1fr;
@@ -917,51 +884,18 @@
   .walkthrough-caption p {
     font-size: 14px;
   }
-  .walkthrough-screen {
-    padding: 18px 14px;
-  }
-  .walkthrough-screen-title {
-    font-size: 12px;
-    gap: 8px;
-  }
-  .walkthrough-status {
-    font-size: 11px;
-  }
-  .walkthrough-member strong,
-  .walkthrough-sale strong {
-    font-size: 13px;
-  }
-  .walkthrough-member div > span,
-  .walkthrough-sale div > span {
-    font-size: 12px;
-  }
-  .walkthrough-sale {
-    gap: 9px;
-  }
-  .walkthrough-sale > svg {
-    width: 24px;
-    height: 24px;
-  }
-  .walkthrough-sale > span {
-    font-size: 11px;
-  }
-  .walkthrough-checks li {
-    font-size: 12px;
-  }
-  .walkthrough-result {
-    padding: 12px;
-    gap: 9px;
-  }
-  .walkthrough-result strong {
-    font-size: 13px;
-  }
-  .walkthrough-result span {
-    font-size: 12px;
-  }
   .walkthrough-disclaimer {
     padding: 12px 16px;
     font-size: 11px;
     line-height: 1.7;
+  }
+  .walkthrough-capture {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .marketing-trial-path {
+    grid-template-columns: 1fr;
+    gap: 25px;
   }
   .marketing-pricing {
     scroll-margin-top: 155px;

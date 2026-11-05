@@ -30,6 +30,25 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
   await page.getByLabel("Primera sucursal").fill("Quito Centro");
   await page.getByRole("button", { name: "Crear mi organización" }).click();
   await expect(page).toHaveURL(/dashboard/);
+  const setupGuide = page.getByRole("region", {
+    name: "Deja listo tu gimnasio",
+  });
+  await expect(setupGuide).toContainText("0 de 3 completadas");
+  await page.setViewportSize({ width: 375, height: 900 });
+  await expect(
+    setupGuide.getByRole("link", { name: "Agregar servicios" }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await setupGuide.screenshot({ path: ".local/gymora-onboarding-375.png" });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await setupGuide.screenshot({ path: ".local/gymora-onboarding-1440.png" });
+  await expect(
+    setupGuide.getByRole("link", { name: "Agregar servicios" }),
+  ).toHaveAttribute("href", "/settings?tab=services");
   const testOwner = await db.user.findUniqueOrThrow({
     where: { email },
     include: { staff: true },
@@ -76,6 +95,8 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
   await dialog.getByLabel("Duración de la membresía").selectOption("1");
   await dialog.getByRole("checkbox", { name: "Machines", exact: true }).check();
   await saveDialog(page);
+  await page.goto("/dashboard");
+  await expect(setupGuide).toContainText("1 de 3 completadas");
   await page.goto("/settings?tab=staff");
   await page.getByRole("button", { name: "Nuevo empleado" }).click();
   dialog = page.getByRole("dialog");
@@ -120,6 +141,12 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
   await expect(page).toHaveURL(/members\//);
   const memberUrl = page.url();
   const memberId = memberUrl.split("/").pop()!;
+  await page.goto("/dashboard");
+  await expect(setupGuide).toContainText("2 de 3 completadas");
+  await setupGuide
+    .getByRole("link", { name: "Abrir perfil y registrar pago" })
+    .click();
+  await expect(page).toHaveURL(new RegExp(`${memberId}#registrar-membresia$`));
   await page.getByLabel("Plan", { exact: true }).selectOption({ index: 1 });
   await page.getByLabel(/Confirma el importe USD/).fill("25.00");
   await page
@@ -129,6 +156,9 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
     .getByRole("button", { name: "Confirmar cobro y membresía" })
     .click();
   await expect(page.getByRole("status")).toContainText("Recibo");
+  await page.goto("/dashboard");
+  await expect(setupGuide).toHaveCount(0);
+  await page.goto(memberUrl);
   await expect(
     page.getByRole("img", { name: "Credencial QR de Andrea" }),
   ).toBeVisible();
@@ -278,6 +308,21 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
   const otherOwner = await db.user.findUniqueOrThrow({
     where: { email: otherEmail },
     include: { staff: true },
+  });
+  await expect(
+    otherPage.getByRole("region", { name: "Deja listo tu gimnasio" }),
+  ).toContainText("0 de 3 completadas");
+  await db.staff.update({
+    where: { id: otherOwner.staff!.id },
+    data: { role: "TRAINER" },
+  });
+  await otherPage.reload();
+  await expect(
+    otherPage.getByRole("region", { name: "Deja listo tu gimnasio" }),
+  ).toHaveCount(0);
+  await db.staff.update({
+    where: { id: otherOwner.staff!.id },
+    data: { role: "OWNER" },
   });
   await db.saaSSubscription.update({
     where: { organizationId: otherOwner.staff!.organizationId },

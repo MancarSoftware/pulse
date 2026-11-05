@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/icon";
+import { GettingStarted } from "@/components/getting-started";
 import { pageContext } from "@/lib/page-context";
 import { db } from "@/infrastructure/db";
 import { dayStart, localDate, addDays } from "@/shared/dates";
@@ -82,6 +83,7 @@ export default async function Dashboard({
           <Icon name="search" /> Buscar socio
         </Link>
       </div>
+      <GettingStarted ctx={ctx} />
       <section className="day-banner" aria-label="Acciones de recepción">
         <div className="day-banner-copy">
           <span className="banner-label">
