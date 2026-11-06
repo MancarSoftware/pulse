@@ -108,6 +108,8 @@ model Organization {
   whatsappSignup WhatsAppSignup?
   subscription SaaSSubscription?
   subscriptionPayments SaaSPayment[]
+    memberImports MemberImportBatch[]
+    cashClosings CashClosing[]
 }
 model PlatformAdmin {
   userId String @id
@@ -223,6 +225,8 @@ model Branch {
   movements InventoryMovement[]
   expenses Expense[]
   ledger LedgerEntry[]
+    memberImports MemberImportBatch[]
+    cashClosings CashClosing[]
   @@unique([organizationId, id])
   @@unique([organizationId, name])
 }
@@ -245,6 +249,8 @@ model Staff {
   expenses Expense[]
   ledger LedgerEntry[]
   audits AuditEvent[]
+    memberImports MemberImportBatch[]
+    cashClosings CashClosing[]
   @@unique([organizationId, id])
 }
 model Member {
@@ -325,6 +331,9 @@ model Membership {
   state MembershipState @default(VALID)
   frozenAt DateTime? @db.Timestamptz(3)
   amount Decimal @db.Decimal(14, 2)
+    origin String @default("PAYMENT")
+    importBatchId String?
+    importBatch MemberImportBatch? @relation(fields: [organizationId, importBatchId], references: [organizationId, id])
   createdById String
   createdBy Staff @relation(fields: [organizationId, createdById], references: [organizationId, id])
   createdAt DateTime @default(now())
@@ -333,6 +342,49 @@ model Membership {
   @@unique([organizationId, id])
   @@index([organizationId, memberId, endAt])
   @@index([organizationId, branchId, endAt])
+    @@index([organizationId, importBatchId])
+}
+model MemberImportBatch {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id])
+  branchId String
+  branch Branch @relation(fields: [organizationId, branchId], references: [organizationId, id])
+  createdById String
+  createdBy Staff @relation(fields: [organizationId, createdById], references: [organizationId, id])
+  requestKey String
+  requestHash String
+  recordCount Int
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  memberships Membership[]
+  @@unique([organizationId, id])
+  @@unique([organizationId, requestKey])
+}
+model CashClosing {
+  id String @id @default(cuid())
+  organizationId String
+  organization Organization @relation(fields: [organizationId], references: [id])
+  branchId String
+  branch Branch @relation(fields: [organizationId, branchId], references: [organizationId, id])
+  createdById String
+  createdBy Staff @relation(fields: [organizationId, createdById], references: [organizationId, id])
+  businessDate DateTime @db.Date
+  version Int
+  opening Decimal @db.Decimal(14, 2)
+  counted Decimal @db.Decimal(14, 2)
+  expected Decimal @db.Decimal(14, 2)
+  difference Decimal @db.Decimal(14, 2)
+  cashMethodIds String[]
+  methodSnapshot Json
+  entryCount Int
+  reason String
+  requestKey String
+  requestHash String
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@unique([organizationId, id])
+  @@unique([organizationId, requestKey])
+  @@unique([organizationId, branchId, businessDate, version])
+  @@index([organizationId, branchId, businessDate])
 }
 model PaymentMethod {
   id String @id @default(cuid())

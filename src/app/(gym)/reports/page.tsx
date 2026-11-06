@@ -57,6 +57,15 @@ export default async function Reports({
           </p>
         </div>
       </div>
+      <p>
+        <Link href="/cash-closing">Contar efectivo y cerrar caja →</Link>
+        {ctx.role === "OWNER" && (
+          <>
+            {" "}
+            · <Link href="/data">Exportar registros CSV →</Link>
+          </>
+        )}
+      </p>
       <form className="filters">
         <label>
           Desde

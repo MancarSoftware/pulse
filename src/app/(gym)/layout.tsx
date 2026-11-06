@@ -68,6 +68,12 @@ export default async function GymLayout({
           {can(ctx.role, "reports:read") && (
             <NavLink href="/reports">Reportes y caja</NavLink>
           )}
+          {can(ctx.role, "reports:read") && (
+            <NavLink href="/cash-closing">Cierre de caja</NavLink>
+          )}
+          {ctx.role === "OWNER" && (
+            <NavLink href="/data">Importar y exportar</NavLink>
+          )}
           {can(ctx.role, "settings:write") && (
             <NavLink href="/settings">Configuración</NavLink>
           )}

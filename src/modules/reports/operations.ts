@@ -77,7 +77,7 @@ export async function operationalReport(ctx: Context, search: Search) {
       take: 100,
     }),
     db.$queryRaw<{ new: number; renewals: number }[]>(
-      Prisma.sql`SELECT COUNT(*) FILTER (WHERE NOT EXISTS(SELECT 1 FROM "Membership" old WHERE old."organizationId" = m."organizationId" AND old."memberId" = m."memberId" AND (old."createdAt", old.id) < (m."createdAt", m.id)))::int AS new, COUNT(*) FILTER (WHERE EXISTS(SELECT 1 FROM "Membership" old WHERE old."organizationId" = m."organizationId" AND old."memberId" = m."memberId" AND (old."createdAt", old.id) < (m."createdAt", m.id)))::int AS renewals FROM "Membership" m WHERE m."organizationId" = ${ctx.organizationId} ${branchSql} AND m."createdAt" >= ${window.from} AND m."createdAt" < ${window.to}`,
+      Prisma.sql`SELECT COUNT(*) FILTER (WHERE NOT EXISTS(SELECT 1 FROM "Membership" old WHERE old."organizationId" = m."organizationId" AND old."memberId" = m."memberId" AND (old."createdAt", old.id) < (m."createdAt", m.id)))::int AS new, COUNT(*) FILTER (WHERE EXISTS(SELECT 1 FROM "Membership" old WHERE old."organizationId" = m."organizationId" AND old."memberId" = m."memberId" AND (old."createdAt", old.id) < (m."createdAt", m.id)))::int AS renewals FROM "Membership" m WHERE m."origin" = 'PAYMENT' AND m."organizationId" = ${ctx.organizationId} ${branchSql} AND m."createdAt" >= ${window.from} AND m."createdAt" < ${window.to}`,
     ),
     db.$queryRaw<{ day: string; count: number }[]>(
       Prisma.sql`SELECT to_char("createdAt" AT TIME ZONE 'America/Guayaquil', 'YYYY-MM-DD') AS day, COUNT(*)::int AS count FROM "CheckIn" WHERE "organizationId" = ${ctx.organizationId} ${attendanceBranch} AND "createdAt" >= ${window.from} AND "createdAt" < ${window.to} GROUP BY 1 ORDER BY 1`,

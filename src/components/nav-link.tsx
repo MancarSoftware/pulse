@@ -10,6 +10,8 @@ const icons: Record<string, IconName> = {
   "/inventory": "inventory",
   "/expenses": "expenses",
   "/reports": "reports",
+  "/cash-closing": "expenses",
+  "/data": "inventory",
   "/settings": "settings",
   "/subscription": "expenses",
   "/platform": "settings",

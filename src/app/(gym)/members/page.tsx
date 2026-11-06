@@ -75,6 +75,11 @@ export default async function Members({
           </Modal>
         )}
       </div>
+      {ctx.role === "OWNER" && (
+        <p>
+          <Link href="/data">Importar socios y membresías desde CSV →</Link>
+        </p>
+      )}
       <section className="panel">
         <form className="filters">
           <label className="search">

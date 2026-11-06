@@ -64,6 +64,8 @@ Las contraseñas las procesa Better Auth/scrypt; cookies HTTP-only, SameSite, ex
 
 ## Reglas importantes
 
+Importación histórica, exportaciones y cierres de caja: [guía de uso y límites](docs/import-export-cash-closing.md).
+
 Los flujos de coincidencias de socios, resultados de recepción, visibilidad de suscripción, permisos, auditoría y salud de respaldos se documentan en [operación diaria](docs/daily-operations.md).
 
 - Zona de calendario: Ecuador continental, America/Guayaquil. La fecha final se almacena como instante exclusivo; acceso hasta finalizar el último día pagado.

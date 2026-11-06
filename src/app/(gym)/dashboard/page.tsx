@@ -166,7 +166,9 @@ export default async function Dashboard({
       </section>
       <div className="period-heading">
         <h2>El pulso de tu negocio</h2>
-        <span className="badge">{newMembers} nuevos socios en el período</span>
+        <span className="badge">
+          {newMembers} perfiles registrados en el período
+        </span>
       </div>
       <form className="filters dashboard-filters">
         <label>

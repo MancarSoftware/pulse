@@ -2,6 +2,68 @@
   display: grid;
   gap: 16px;
 }
+.import-instructions {
+  margin: 22px 0;
+  padding: 14px 0;
+  border-block: 1px solid var(--line);
+}
+.import-instructions summary {
+  cursor: pointer;
+  font-weight: 650;
+  min-height: 44px;
+}
+.import-instructions p {
+  color: var(--muted);
+  line-height: 1.8;
+  font-size: 13px;
+}
+.cash-closing-form {
+  display: grid;
+  gap: 20px;
+  margin-top: 26px;
+}
+.cash-closing-form > .button {
+  justify-self: start;
+}
+.closing-comparison {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  padding: 22px;
+  background: #edf5f1;
+  border-radius: 10px;
+  margin: 0;
+}
+.closing-comparison dt {
+  color: var(--muted);
+  font-size: 13px;
+}
+.closing-comparison dd {
+  margin: 8px 0 0;
+  font-size: 27px;
+  font-weight: 700;
+}
+@media (max-width: 600px) {
+  .cash-closing-heading {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .cash-closing-heading h2 {
+    margin-bottom: 0;
+  }
+  .import-controls.filters {
+    grid-template-columns: 1fr;
+  }
+  .closing-comparison {
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 18px;
+  }
+  .cash-closing-form > .button {
+    width: 100%;
+  }
+}
 .check-in-form > .button {
   justify-self: start;
 }

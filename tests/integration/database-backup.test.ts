@@ -52,6 +52,8 @@ it("round-trips an encrypted database, preserves records and triggers, rejects t
         "Membership",
         "LedgerEntry",
         "WhatsAppMessage",
+        "MemberImportBatch",
+        "CashClosing",
       ]) {
         const query = `SELECT count(*)::int AS total FROM "${table}"`;
         expect((await restored.query(query)).rows).toEqual(

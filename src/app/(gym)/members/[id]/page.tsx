@@ -178,6 +178,14 @@ export default async function MemberProfile({
                       <tr key={m.id}>
                         <td>
                           <strong>{m.planName}</strong>
+                          {m.origin === "IMPORT" && (
+                            <>
+                              <br />
+                              <span className="status neutral">
+                                Contrato migrado · sin cobro en Gymora
+                              </span>
+                            </>
+                          )}
                           {m.durationMonths && (
                             <>
                               <br />
@@ -188,6 +196,9 @@ export default async function MemberProfile({
                           <small>{m.serviceNames.join(", ")}</small>
                           <br />
                           {formatMoney(m.amount)}
+                          {m.origin === "IMPORT" && (
+                            <small> · importe declarado</small>
+                          )}
                         </td>
                         <td>
                           {formatDate(m.startAt)}

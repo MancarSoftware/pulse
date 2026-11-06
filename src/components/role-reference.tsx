@@ -11,7 +11,7 @@ export function RoleReference() {
     { label: "Registrar y editar socios", permission: "members:write" },
     { label: "Registrar ingresos", permission: "checkins:write" },
     { label: "Cobrar y renovar", permission: "payments:write" },
-    { label: "Reportes", permission: "reports:read" },
+    { label: "Reportes y cierre de caja", permission: "reports:read" },
     { label: "Configuración y congelaciones", permission: "catalog:write" },
     { label: "Revertir operaciones", permission: "refunds:write" },
     { label: "Equipo y actividad", permission: "staff:write" },
@@ -35,6 +35,13 @@ export function RoleReference() {
             </tr>
           </thead>
           <tbody>
+            <tr>
+              <td>Importar y exportar registros</td>
+              <td>Permitido</td>
+              <td>Sin acceso</td>
+              <td>Sin acceso</td>
+              <td>Sin acceso</td>
+            </tr>
             {functions.map((item) => (
               <tr key={item.permission}>
                 <td>{item.label}</td>

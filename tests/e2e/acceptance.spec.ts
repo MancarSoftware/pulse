@@ -384,6 +384,116 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
     path: "test-results/acceptance-reports.png",
     fullPage: true,
   });
+  const ledgerBeforeImport = await db.ledgerEntry.count({
+    where: { organizationId: testOwner.staff!.organizationId },
+  });
+  await page.goto("/data");
+  const csv = `nombres,apellidos,telefono,email,notas,plan,inicio,ultimo_dia,importe,congelada_desde\nImportada,Ejemplo,0991234567,importada@example.test,Contrato previo,Machines mensual,${localDate(addDays(dayStart(localDate()), -5))},${localDate(addDays(dayStart(localDate()), 25))},18.50,\nAndrea,López,0990000011,,,,,,,\nError,Telefono,09abc,,,,,,,\n`;
+  await page
+    .getByLabel("Archivo CSV")
+    .setInputFiles({
+      name: "socios.csv",
+      mimeType: "text/csv",
+      buffer: Buffer.from(csv, "utf8"),
+    });
+  await page
+    .getByRole("button", { name: "Revisar archivo", exact: true })
+    .click();
+  await expect(
+    page.getByText(/1 listos · 1 con errores · 1 con coincidencias/),
+  ).toBeVisible();
+  await page
+    .getByRole("checkbox", { name: /Revisé las filas, las fechas/ })
+    .check();
+  await page
+    .getByRole("button", { name: "Confirmar importación de 1 socios" })
+    .click();
+  await expect(page.getByRole("status")).toContainText(
+    "Importación completada: 1 socios",
+  );
+  expect(
+    await db.ledgerEntry.count({
+      where: { organizationId: testOwner.staff!.organizationId },
+    }),
+  ).toBe(ledgerBeforeImport);
+  const migrated = await db.member.findFirstOrThrow({
+    where: {
+      organizationId: testOwner.staff!.organizationId,
+      phone: "0991234567",
+    },
+  });
+  await page.goto(`/members/${migrated.id}`);
+  await expect(
+    page.getByText("Contrato migrado · sin cobro en Gymora"),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Todavía no hay pagos registrados.", { exact: true }),
+  ).toBeVisible();
+  await page.goto("/data");
+  await page.getByLabel("Tipo de registros").selectOption("memberships");
+  const downloadPromise = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Descargar CSV", exact: true })
+    .click();
+  const downloaded = await downloadPromise;
+  const stream = await downloaded.createReadStream();
+  const parts: Buffer[] = [];
+  for await (const part of stream!) parts.push(Buffer.from(part));
+  const exportText = Buffer.concat(parts).toString("utf8");
+  expect(exportText).toContain("Importada Ejemplo");
+  expect(exportText).not.toContain(migrated.credential);
+  for (const width of [375, 768, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await page.screenshot({
+      path: `.local/data-tools-${width}.png`,
+      fullPage: true,
+    });
+  }
+  await page.goto("/cash-closing");
+  await page.getByLabel("Fondo inicial USD").fill("10");
+  await page.getByLabel("Efectivo contado USD").fill("62.75");
+  await page
+    .getByRole("checkbox", { name: /Conté el efectivo y revisé/ })
+    .check();
+  await page
+    .getByRole("button", { name: "Guardar cierre de caja", exact: true })
+    .click();
+  await expect(
+    page.getByRole("region", { name: "Historial de cierres" }),
+  ).toContainText("Versión 1");
+  await page.getByLabel("Efectivo contado USD").fill("62.50");
+  await page
+    .getByLabel("Motivo de diferencia o nueva versión")
+    .fill("Faltante de 25 centavos revisado");
+  await page
+    .getByRole("checkbox", { name: /Conté el efectivo y revisé/ })
+    .check();
+  await page
+    .getByRole("button", {
+      name: "Guardar nueva versión de cierre",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByRole("region", { name: "Historial de cierres" }),
+  ).toContainText("Versión 2");
+  for (const width of [375, 768, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await page.screenshot({
+      path: `.local/cash-closing-${width}.png`,
+      fullPage: true,
+    });
+  }
   const other = await browser.newContext();
   const otherPage = await other.newPage();
   const otherEmail = `other-${crypto.randomUUID()}@example.test`;
@@ -496,6 +606,23 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
     data: { kind: "service", name: "Forbidden" },
   });
   expect(denied.status()).toBe(403);
+  const forbiddenExport = await employeePage.request.post("/api/gym/exports", {
+    headers: { origin: "http://localhost:3000" },
+    data: { kind: "members" },
+  });
+  expect(forbiddenExport.status()).toBe(403);
+  const forbiddenImport = await employeePage.request.post(
+    "/api/gym/member-import",
+    {
+      headers: { origin: "http://localhost:3000" },
+      data: {
+        action: "preview",
+        branchId: testOwner.staff!.branchId,
+        csv: "nombres,apellidos,telefono\nA,B,099",
+      },
+    },
+  );
+  expect(forbiddenImport.status()).toBe(403);
   await employeePage.goto("/platform?tab=operations");
   await expect(
     employeePage.getByRole("heading", { name: "Acceso restringido" }),

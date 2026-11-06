@@ -11,7 +11,7 @@ export function checkOrigin(request: Request) {
   )
     throw new AppError("ORIGIN", "Origen no autorizado", 403);
 }
-export async function readBody(request: Request) {
+export async function readBody(request: Request, limit = 32768) {
   if (!request.headers.get("content-type")?.includes("application/json"))
     throw new AppError("CONTENT_TYPE", "Se requiere JSON", 415);
   const reader = request.body?.getReader();
@@ -22,7 +22,7 @@ export async function readBody(request: Request) {
     const chunk = await reader.read();
     if (chunk.done) break;
     size += chunk.value.byteLength;
-    if (size > 32768) {
+    if (size > limit) {
       await reader.cancel();
       throw new AppError("TOO_LARGE", "Solicitud demasiado grande", 413);
     }

@@ -131,6 +131,14 @@ export default async function MemberHistory({
             <tr key={e.id}>
               <td>
                 {e.planName}
+                {e.origin === "IMPORT" && (
+                  <>
+                    <br />
+                    <small>
+                      Contrato migrado: importe declarado, sin ingreso
+                    </small>
+                  </>
+                )}
                 <br />
                 <small>{e.serviceNames.join(", ")}</small>
               </td>

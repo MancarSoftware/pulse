@@ -59,6 +59,12 @@ export async function ownerActivity(ctx: Context, search: Search) {
   return { rows, total, actors, page: p.page };
 }
 export function activityLabel(action: string) {
+  if (action === "member.imported") return "Socio y contrato migrados";
+  if (action === "member.import.completed")
+    return "Importación de socios completada";
+  if (action === "cash.closing.recorded") return "Cierre de caja guardado";
+  if (action === "data.export.prepared")
+    return "Archivo de exportación preparado";
   const labels: Record<string, string> = {
     "member.created": "Socio registrado",
     "member.updated": "Perfil de socio actualizado",

@@ -20,6 +20,14 @@ export async function correctCalendarMemberships(ctx: Context) {
     const review: string[] = [];
     let previous: { memberId: string; oldEnd: Date; newEnd: Date } | undefined;
     for (const contract of contracts) {
+      if (contract.origin === "IMPORT") {
+        previous = {
+          memberId: contract.memberId,
+          oldEnd: contract.endAt,
+          newEnd: contract.endAt,
+        };
+        continue;
+      }
       const shift =
         previous?.memberId === contract.memberId &&
         previous.oldEnd.getTime() === contract.startAt.getTime()
