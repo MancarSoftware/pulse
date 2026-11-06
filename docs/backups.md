@@ -23,6 +23,8 @@ La autenticación completa del archivo ocurre antes de ejecutar SQL. La restaura
 
 ## Automatización local
 
+El comando de creación registra inicio, éxito verificado o fallo en `backup-status.json`, sin nombres de archivos ni credenciales. Administración SaaS → Respaldos muestra ese resultado únicamente a administradores de la plataforma. Conserva el último éxito al fallar un intento y señala atrasos mayores de 36 horas. No sustituye la supervisión del Programador de tareas ni la prueba de restauración.
+
 En Windows, `scripts/install-backup-task.ps1` registra `Gymora-Encrypted-Database-Backup` a las 03:00 de la zona horaria del equipo. Ejecuta con el usuario actual, sin privilegios elevados, con reanudación cuando esté disponible y evitando ejecuciones simultáneas. No reemplaza una tarea existente. Se necesita una sesión de Windows iniciada, PostgreSQL accesible y la carpeta del proyecto disponible. Revisar el resultado en el Programador de tareas; `LastTaskResult = 0` indica finalización correcta. Un fallo debe revisarse, no interpretarse como un respaldo creado.
 
 Los archivos se conservan: no se borra automáticamente ningún respaldo. Supervisar espacio y antigüedad, y definir una política de retención al preparar el alojamiento. El respaldo local protege frente a errores de datos; la copia externa, PITR/WAL y las alertas de producción se configurarán con el alojamiento. No se ha contratado ni habilitado almacenamiento externo.

@@ -12,6 +12,7 @@ import { OperationForm } from "@/components/operation-form";
 import { saasPeriodLabel } from "@/modules/billing/schedule";
 import { Pagination } from "@/components/pagination";
 import { pagination, type Search } from "@/modules/reports/queries";
+import { SubscriptionNextStep } from "@/components/subscription-next-step";
 export default async function SubscriptionPage({
   searchParams,
 }: {
@@ -50,6 +51,11 @@ export default async function SubscriptionPage({
   const data = await ownerBilling(ctx, p.page);
   const pending = data.pendingPayments > 0;
   const canSubmit = !!data.settings.paymentInstructions.trim() && !pending;
+  const lastReview = await db.saaSPayment.findFirst({
+    where: { organizationId: ctx.organizationId },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    select: { status: true, reviewNote: true },
+  });
   return (
     <BillingShell platformAdmin={platformAdmin}>
       <div className="page-heading">
@@ -122,12 +128,13 @@ export default async function SubscriptionPage({
           </span>
         </div>
       </section>
-      {pending && (
-        <p className="notice warning" role="status">
-          Tu pago está pendiente de revisión. La suscripción se actualizará
-          cuando Gymora confirme que recibió el dinero.
-        </p>
-      )}
+      <SubscriptionNextStep
+        status={status}
+        pending={pending}
+        paidPeriod={!!data.subscription?.paidUntil}
+        paymentConfigured={!!data.settings.paymentInstructions.trim()}
+        lastReview={lastReview}
+      />
       <section className="panel">
         <h2>Cómo pagar</h2>
         <p className="notice warning">

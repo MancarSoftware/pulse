@@ -22,6 +22,14 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
+    env: {
+      AUTH_EMAIL_FROM: "",
+      RESEND_API_KEY: "",
+      WHATSAPP_ACCESS_TOKEN: "",
+      WHATSAPP_META_APP_SECRET: "",
+      WHATSAPP_ORGANIZATION_ID: "",
+      BACKUP_DIRECTORY: ".local/e2e-backups",
+    },
     command: "node --env-file=.env.test node_modules/next/dist/bin/next start",
     url: "http://localhost:3000/login",
     reuseExistingServer: false,

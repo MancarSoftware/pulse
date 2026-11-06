@@ -29,3 +29,7 @@ No se han validado una publicación remota, backup/restore de un proveedor, rece
 La validación de navegador automatizada cubre Chromium; no equivale a una auditoría formal WCAG, pruebas de lector de pantalla, Safari/Firefox ni una prueba de carga. Estas validaciones deben realizarse en el entorno y dispositivos de lanzamiento. La CI está configurada en el repositorio; su ejecución remota requiere subirlo a un proveedor compatible.
 
 El software emite recibos internos y registra cobros manuales en USD. No implementa facturación electrónica, pasarela bancaria, cálculo fiscal, conciliación, devoluciones parciales ni suscripciones de facturación del propio SaaS. Este alcance sigue las reglas confirmadas.
+
+# Aislamiento de integraciones en navegador
+
+El servidor de Playwright vacía explícitamente las credenciales de correo y WhatsApp y usa una carpeta de estado de respaldo propia. Así, las variables que Next.js encuentre en `.env` no habilitan envíos reales al ejecutar escenarios con usuarios ficticios. La base sigue siendo la configurada en `.env.test`, cuyo nombre debe terminar en `_test`.

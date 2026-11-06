@@ -14,6 +14,8 @@ import {
   resolveWhatsAppConfig,
 } from "@/modules/notifications/whatsapp-connect";
 import { WhatsAppConnect } from "@/components/whatsapp-connect";
+import { OwnerActivity } from "@/components/owner-activity";
+import { RoleReference, roleLabels } from "@/components/role-reference";
 export default async function Settings({
   searchParams,
 }: {
@@ -32,7 +34,9 @@ export default async function Settings({
     type: "checkbox",
   };
   let content: React.ReactNode;
-  if (tab === "whatsapp") {
+  if (tab === "activity") {
+    content = <OwnerActivity ctx={ctx} search={search} />;
+  } else if (tab === "whatsapp") {
     const configured = !!(await resolveWhatsAppConfig(ctx.organizationId));
     const whatsapp = await whatsappPublicStatus(ctx.organizationId);
     const pending = await db.whatsAppMessage.count({
@@ -284,11 +288,15 @@ export default async function Settings({
                     <small>{s.user.email}</small>
                   </td>
                   <td>{s.branch.name}</td>
-                  <td>{s.role}</td>
+                  <td>{roleLabels[s.role]}</td>
                   <td>{s.active ? "Activo" : "Deshabilitado"}</td>
                   <td>
                     {s.role !== "OWNER" && (
                       <Modal title="Modificar permisos" trigger="Permisos">
+                        <p className="notice">
+                          Al guardar se cerrarán las sesiones de este empleado.
+                          Tendrá que iniciar sesión con sus nuevos permisos.
+                        </p>
                         <OperationForm
                           endpoint="/api/gym/catalog"
                           fixed={{ kind: "staff-access", id: s.id }}
@@ -308,6 +316,7 @@ export default async function Settings({
             </tbody>
           </table>
         </div>
+        <RoleReference />
       </>
     );
   } else {
@@ -495,15 +504,26 @@ export default async function Settings({
               Equipo
             </Link>
           )}
+          {can(ctx.role, "staff:write") && (
+            <Link
+              href="/settings?tab=activity"
+              aria-current={tab === "activity" ? "page" : undefined}
+            >
+              Actividad
+            </Link>
+          )}
         </nav>
         <section className="panel settings-panel">
           {content}
-          {tab !== "general" && tab !== "staff" && tab !== "whatsapp" && (
-            <p className="settings-note">
-              <Icon name={"check" as IconName} /> Puedes eliminar registros sin
-              uso. Deshabilita los utilizados para conservar su historial.
-            </p>
-          )}
+          {tab !== "general" &&
+            tab !== "staff" &&
+            tab !== "whatsapp" &&
+            tab !== "activity" && (
+              <p className="settings-note">
+                <Icon name={"check" as IconName} /> Puedes eliminar registros
+                sin uso. Deshabilita los utilizados para conservar su historial.
+              </p>
+            )}
         </section>
       </div>
     </>

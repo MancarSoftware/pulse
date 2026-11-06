@@ -523,7 +523,7 @@ it("paginates members and transactions in 12-record pages without changing repor
     await saveMember(f.ctx, {
       firstName: `Socio ${i}`,
       lastName: `Apellido ${i}`,
-      phone: "0990000000",
+      phone: `099000${String(i + 1).padStart(4, "0")}`,
       branchId: f.ctx.branchId,
     });
     await sellDayPass(f.ctx, {

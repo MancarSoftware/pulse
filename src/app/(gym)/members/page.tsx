@@ -30,6 +30,7 @@ export default async function Members({
           <Modal title="Registrar socio" trigger="Nuevo socio">
             <OperationForm
               endpoint="/api/gym/members"
+              memberDuplicateReview
               redirectTo="/members/:id"
               label="Registrar socio"
               fields={[

@@ -64,6 +64,8 @@ Las contraseñas las procesa Better Auth/scrypt; cookies HTTP-only, SameSite, ex
 
 ## Reglas importantes
 
+Los flujos de coincidencias de socios, resultados de recepción, visibilidad de suscripción, permisos, auditoría y salud de respaldos se documentan en [operación diaria](docs/daily-operations.md).
+
 - Zona de calendario: Ecuador continental, America/Guayaquil. La fecha final se almacena como instante exclusivo; acceso hasta finalizar el último día pagado.
 - Conexiones PostgreSQL fijadas a UTC, incluso cuando el servidor usa una zona local; conversión a Ecuador únicamente en las reglas de calendario y presentación.
 - Renovación anticipada inicia cuando acaba el último contrato; vencida, desde el día del cobro. El contrato conserva servicios y precio históricos.

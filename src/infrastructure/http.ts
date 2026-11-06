@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { Prisma } from "@/generated/prisma/client";
-import { AppError } from "@/shared/errors";
+import { AppError, DuplicateMemberError, CheckInError } from "@/shared/errors";
 import { readEnvironment } from "./env";
 import * as Sentry from "@sentry/nextjs";
 export function checkOrigin(request: Request) {
@@ -36,6 +36,28 @@ export async function readBody(request: Request) {
   }
 }
 export function errorResponse(error: unknown) {
+  if (error instanceof CheckInError)
+    return NextResponse.json(
+      {
+        error: {
+          code: error.code,
+          message: error.message,
+          reason: error.reason,
+        },
+      },
+      { status: error.status },
+    );
+  if (error instanceof DuplicateMemberError)
+    return NextResponse.json(
+      {
+        error: {
+          code: error.code,
+          message: error.message,
+          matches: error.matches,
+        },
+      },
+      { status: error.status },
+    );
   if (error instanceof AppError)
     return NextResponse.json(
       { error: { code: error.code, message: error.message } },

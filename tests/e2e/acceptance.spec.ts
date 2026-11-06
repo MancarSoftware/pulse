@@ -141,6 +141,35 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
   await expect(page).toHaveURL(/members\//);
   const memberUrl = page.url();
   const memberId = memberUrl.split("/").pop()!;
+  await expect(
+    page.getByRole("region", { name: "Resumen de membresía" }),
+  ).toContainText("Sin acceso vigente");
+  await page.goto("/members");
+  await page.getByRole("button", { name: "Nuevo socio" }).click();
+  const duplicateDialog = page.getByRole("dialog");
+  await duplicateDialog.getByLabel("Nombres", { exact: true }).fill("Mateo");
+  await duplicateDialog
+    .getByLabel("Apellidos", { exact: true })
+    .fill("Familia");
+  await duplicateDialog
+    .getByLabel("Teléfono", { exact: true })
+    .fill("0990000011");
+  await duplicateDialog
+    .getByRole("button", { name: "Registrar socio" })
+    .click();
+  await expect(
+    duplicateDialog.getByRole("region", { name: "Revisar coincidencias" }),
+  ).toBeVisible();
+  await expect(
+    duplicateDialog.getByRole("link", { name: "Andrea López" }),
+  ).toBeVisible();
+  await duplicateDialog
+    .getByRole("checkbox", { name: /Revisé las coincidencias/ })
+    .check();
+  await duplicateDialog
+    .getByRole("button", { name: "Registrar socio" })
+    .click();
+  await expect(page).toHaveURL(/members\//);
   await page.goto("/dashboard");
   await expect(setupGuide).toContainText("2 de 3 completadas");
   await setupGuide
@@ -158,6 +187,69 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
   await expect(page.getByRole("status")).toContainText("Recibo");
   await page.goto("/dashboard");
   await expect(setupGuide).toHaveCount(0);
+  await page.goto(memberUrl);
+  await expect(
+    page.getByRole("region", { name: "Resumen de membresía" }),
+  ).toContainText("Membresía vigente");
+  const beforePause = await db.membership.findFirstOrThrow({
+    where: { memberId },
+  });
+  await page
+    .getByLabel("Motivo de la pausa o reactivación")
+    .fill("Pausa solicitada por el socio");
+  await page
+    .getByRole("button", { name: "Congelar membresías", exact: true })
+    .click();
+  await expect(
+    page.getByRole("region", { name: "Resumen de membresía" }),
+  ).toContainText("Acceso pausado");
+  await page
+    .getByLabel("Motivo de la pausa o reactivación")
+    .fill("Regreso del socio el mismo día");
+  await page
+    .getByRole("button", { name: "Reactivar membresías", exact: true })
+    .click();
+  await expect(
+    page.getByRole("region", { name: "Resumen de membresía" }),
+  ).toContainText("Membresía vigente");
+  expect(
+    (await db.membership.findUniqueOrThrow({ where: { id: beforePause.id } }))
+      .endAt,
+  ).toEqual(beforePause.endAt);
+  for (const width of [375, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await page
+      .getByRole("region", { name: "Resumen de membresía" })
+      .screenshot({ path: `.local/member-overview-${width}.png` });
+  }
+  await page.goto("/settings?tab=activity&group=member");
+  await expect(
+    page.getByRole("heading", { name: "Actividad del gimnasio" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Coincidencias revisadas y confirmadas"),
+  ).toBeVisible();
+  await page.setViewportSize({ width: 375, height: 1000 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: ".local/owner-activity-375.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/settings?tab=staff");
+  await page.getByText("Qué puede hacer cada rol", { exact: true }).click();
+  await expect(
+    page.getByRole("columnheader", { name: "Propietario", exact: true }),
+  ).toBeVisible();
   await page.goto(memberUrl);
   await expect(
     page.getByRole("img", { name: "Credencial QR de Andrea" }),
@@ -195,6 +287,10 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
   ).toHaveCount(0);
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.goto("/check-in?q=Andrea");
+  await page.getByRole("link", { name: "Buscar socio sin cámara" }).click();
+  await expect(
+    page.getByLabel("Buscar por nombre o teléfono", { exact: true }),
+  ).toBeFocused();
   const result = page.locator("section").filter({
     has: page.getByRole("heading", { name: "Resultado de búsqueda" }),
   });
@@ -371,6 +467,18 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
   await expect(expiredResult.getByRole("alert")).toContainText(
     "Acceso denegado",
   );
+  await expect(expiredResult.getByRole("alert")).toContainText(
+    "Membresía vencida",
+  );
+  await page.setViewportSize({ width: 375, height: 1000 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await expiredResult
+    .getByRole("alert")
+    .screenshot({ path: ".local/reception-expired-375.png" });
   const employee = await browser.newContext();
   const employeePage = await employee.newPage();
   await employeePage.goto("/login");
@@ -388,6 +496,13 @@ test("real gym acceptance: configure, enroll, check in, sell, expense, renew and
     data: { kind: "service", name: "Forbidden" },
   });
   expect(denied.status()).toBe(403);
+  await employeePage.goto("/platform?tab=operations");
+  await expect(
+    employeePage.getByRole("heading", { name: "Acceso restringido" }),
+  ).toBeVisible();
+  await expect(
+    employeePage.getByRole("region", { name: "Salud de respaldos" }),
+  ).toHaveCount(0);
   await employee.close();
   expect(errors).toEqual([]);
 });

@@ -7,7 +7,7 @@ import {
 } from "@/modules/auth/permissions";
 import { audit, branchScope } from "@/modules/transactions/service";
 import { id, name, phoneNumber, memberEmail } from "@/shared/schemas";
-import { AppError, requireFound } from "@/shared/errors";
+import { AppError, DuplicateMemberError, requireFound } from "@/shared/errors";
 export const memberSchema = z
   .object({
     firstName: name,
@@ -19,6 +19,7 @@ export const memberSchema = z
     emergencyContact: z.string().max(200).optional(),
     active: z.boolean().default(true),
     whatsappOptIn: z.boolean().optional(),
+    duplicateConfirmed: z.boolean().default(false),
   })
   .strict();
 export async function saveMember(
@@ -28,17 +29,75 @@ export async function saveMember(
 ) {
   authorize(ctx, "members:write");
   const data = memberSchema.parse(input);
-  const { whatsappOptIn, ...values } = data;
+  const { whatsappOptIn, duplicateConfirmed, ...values } = data;
+  values.email = values.email?.toLowerCase();
   return serializable(async (tx) => {
     await branchScope(tx, ctx, data.branchId);
+    const previousMember = memberId
+      ? requireFound(
+          await tx.member.findFirst({
+            where: { organizationId: ctx.organizationId, id: memberId },
+          }),
+        )
+      : null;
+    if (previousMember) authorizeBranch(ctx, previousMember.branchId);
+    const identityChanged =
+      !previousMember ||
+      previousMember.phone !== data.phone ||
+      (previousMember.email ?? "").toLowerCase() !== (values.email ?? "") ||
+      previousMember.firstName !== data.firstName ||
+      previousMember.lastName !== data.lastName;
+    if (identityChanged && !duplicateConfirmed) {
+      const matches = await tx.member.findMany({
+        where: {
+          organizationId: ctx.organizationId,
+          ...(memberId ? { id: { not: memberId } } : {}),
+          OR: [
+            { phone: data.phone },
+            ...(values.email
+              ? [
+                  {
+                    email: {
+                      equals: values.email,
+                      mode: "insensitive" as const,
+                    },
+                  },
+                ]
+              : []),
+            {
+              firstName: { equals: data.firstName, mode: "insensitive" },
+              lastName: { equals: data.lastName, mode: "insensitive" },
+            },
+          ],
+        },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          branchId: true,
+          active: true,
+        },
+        take: 20,
+      });
+      if (matches.length)
+        throw new DuplicateMemberError(
+          matches
+            .filter(
+              (match) =>
+                ["OWNER", "ADMIN"].includes(ctx.role) ||
+                match.branchId === ctx.branchId,
+            )
+            .slice(0, 5)
+            .map((match) => ({
+              id: match.id,
+              name: `${match.firstName} ${match.lastName}`,
+              active: match.active,
+            })),
+        );
+    }
     let consentAt: Date | null = whatsappOptIn ? new Date() : null;
-    if (memberId) {
-      const previous = requireFound(
-        await tx.member.findFirst({
-          where: { organizationId: ctx.organizationId, id: memberId },
-        }),
-      );
-      authorizeBranch(ctx, previous.branchId);
+    if (previousMember) {
+      const previous = previousMember;
       consentAt =
         previous.phone !== data.phone || whatsappOptIn === false
           ? null
@@ -72,14 +131,14 @@ export async function saveMember(
           data: {
             ...values,
             whatsappConsentAt: consentAt,
-            email: data.email || null,
+            email: values.email || null,
           },
         })
       : await tx.member.create({
           data: {
             ...values,
             whatsappConsentAt: consentAt,
-            email: data.email || null,
+            email: values.email || null,
             organizationId: ctx.organizationId,
           },
         });
@@ -92,6 +151,7 @@ export async function saveMember(
         branchId: member.branchId,
         active: member.active,
         whatsappConsent: Boolean(member.whatsappConsentAt),
+        duplicateConfirmed,
       },
     );
     if (!member.whatsappConsentAt)

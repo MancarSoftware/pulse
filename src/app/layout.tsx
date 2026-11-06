@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./operations.css";
 export const metadata: Metadata = {
   title: "Gymora",
   description: "Operación y administración de gimnasios",

@@ -16,6 +16,7 @@ import { AppError } from "@/shared/errors";
 import { membershipLabels, durationLabel } from "@/shared/presentation";
 import { resolveWhatsAppConfig } from "@/modules/notifications/whatsapp-connect";
 import { ecuadorWhatsAppPhone } from "@/modules/notifications/whatsapp-content";
+import { MemberMembershipOverview } from "@/components/member-membership-overview";
 export default async function MemberProfile({
   params,
 }: {
@@ -42,6 +43,13 @@ export default async function MemberProfile({
     margin: 2,
   });
   const latest = member.memberships.find((m) => m.state !== "CANCELLED");
+  const actionableMemberships = member.memberships.filter(
+    (m) =>
+      m.state === "FROZEN" || (m.state === "VALID" && m.endAt > new Date()),
+  );
+  const hasFrozenMemberships = actionableMemberships.some(
+    (m) => m.state === "FROZEN",
+  );
   const whatsappReady = !!(await resolveWhatsAppConfig(ctx.organizationId));
   const notificationLabels = {
     PENDING: "Pendiente",
@@ -72,6 +80,7 @@ export default async function MemberProfile({
           <Modal title="Editar socio" trigger="Editar perfil">
             <OperationForm
               endpoint={`/api/gym/members/${member.id}`}
+              memberDuplicateReview
               method="PATCH"
               fields={[
                 {
@@ -143,6 +152,13 @@ export default async function MemberProfile({
           </Modal>
         )}
       </div>
+      <MemberMembershipOverview
+        organizationId={ctx.organizationId}
+        memberId={member.id}
+        active={member.active}
+        canManage={can(ctx.role, "payments:write")}
+        canPause={can(ctx.role, "catalog:write")}
+      />
       <div className="split">
         <div>
           <section className="panel">
@@ -284,33 +300,34 @@ export default async function MemberProfile({
               )}
             </section>
           )}
-          {can(ctx.role, "catalog:write") && latest && (
-            <section className="panel">
-              <h2>Pausar o reactivar</h2>
-              <p className="muted">
-                La pausa conserva días de calendario y desplaza también los
-                contratos futuros. No genera devoluciones.
-              </p>
-              <OperationForm
-                endpoint="/api/gym/membership-state"
-                fixed={{
-                  memberId: member.id,
-                  action: latest.state === "FROZEN" ? "resume" : "freeze",
-                }}
-                label={
-                  latest.state === "FROZEN"
-                    ? "Reactivar membresías"
-                    : "Congelar membresías"
-                }
-                fields={[
-                  {
-                    name: "reason",
-                    label: "Motivo de la pausa o reactivación",
-                  },
-                ]}
-              />
-            </section>
-          )}
+          {can(ctx.role, "catalog:write") &&
+            actionableMemberships.length > 0 && (
+              <section className="panel" id="pausar-membresia">
+                <h2>Pausar o reactivar</h2>
+                <p className="muted">
+                  La pausa conserva días de calendario y desplaza también los
+                  contratos futuros. No genera devoluciones.
+                </p>
+                <OperationForm
+                  endpoint="/api/gym/membership-state"
+                  fixed={{
+                    memberId: member.id,
+                    action: hasFrozenMemberships ? "resume" : "freeze",
+                  }}
+                  label={
+                    hasFrozenMemberships
+                      ? "Reactivar membresías"
+                      : "Congelar membresías"
+                  }
+                  fields={[
+                    {
+                      name: "reason",
+                      label: "Motivo de la pausa o reactivación",
+                    },
+                  ]}
+                />
+              </section>
+            )}
           <section className="panel">
             <h2>Credencial de acceso</h2>
             <p className="muted">

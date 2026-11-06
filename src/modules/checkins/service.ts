@@ -8,7 +8,7 @@ import {
   financialOperation,
 } from "@/modules/transactions/service";
 import { id, amount, paymentFields } from "@/shared/schemas";
-import { AppError, requireFound } from "@/shared/errors";
+import { AppError, CheckInError, requireFound } from "@/shared/errors";
 import { money } from "@/shared/money";
 import { remainingDays, dayStart, localDate, addDays } from "@/shared/dates";
 export const checkInSchema = z
@@ -60,12 +60,67 @@ export async function checkIn(ctx: Context, input: unknown) {
       },
       orderBy: { endAt: "desc" },
     });
-    if (!membership)
-      throw new AppError(
-        "ACCESS_DENIED",
-        "Acceso denegado: no existe una membresía vigente para este servicio y sucursal",
-        403,
+    if (!membership) {
+      const contracts = await tx.membership.findMany({
+        where: {
+          organizationId: ctx.organizationId,
+          memberId: member.id,
+          branchId: data.branchId,
+          state: { not: "CANCELLED" },
+        },
+        select: { state: true, startAt: true, endAt: true, serviceIds: true },
+      });
+      if (
+        contracts.some(
+          (contract) =>
+            contract.state === "FROZEN" &&
+            contract.serviceIds.includes(data.serviceId),
+        )
+      )
+        throw new CheckInError(
+          "FROZEN",
+          "la membresía está congelada. Reactívala antes de registrar un ingreso.",
+        );
+      if (
+        contracts.some(
+          (contract) =>
+            contract.state === "VALID" &&
+            contract.startAt <= now &&
+            contract.endAt > now,
+        )
+      )
+        throw new CheckInError(
+          "SERVICE",
+          "el servicio seleccionado no está incluido en la membresía vigente.",
+        );
+      if (
+        contracts.some(
+          (contract) =>
+            contract.state === "VALID" &&
+            contract.startAt > now &&
+            contract.serviceIds.includes(data.serviceId),
+        )
+      )
+        throw new CheckInError(
+          "SCHEDULED",
+          "la membresía está programada para una fecha futura.",
+        );
+      if (
+        contracts.some(
+          (contract) =>
+            contract.endAt <= now &&
+            contract.serviceIds.includes(data.serviceId),
+        )
+      )
+        throw new CheckInError(
+          "EXPIRED",
+          "la membresía está vencida. Revisa el perfil para renovarla.",
+        );
+      throw new CheckInError(
+        "NO_MEMBERSHIP",
+        "no existe una membresía vigente para este servicio y sucursal.",
       );
+    }
     const organization = requireFound(
       await tx.organization.findUnique({ where: { id: ctx.organizationId } }),
     );
@@ -117,6 +172,8 @@ export async function checkIn(ctx: Context, input: unknown) {
       message: `Acceso permitido · ${member.firstName} ${member.lastName}`,
       remainingDays: remainingDays(membership.endAt),
       services: membership.serviceNames,
+      memberName: `${member.firstName} ${member.lastName}`,
+      planName: membership.planName,
     };
   }).catch((error) => {
     if (

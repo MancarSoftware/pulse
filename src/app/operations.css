@@ -1,0 +1,171 @@
+.check-in-form {
+  display: grid;
+  gap: 16px;
+}
+.check-in-form > .button {
+  justify-self: start;
+}
+.check-in-field {
+  display: grid;
+  gap: 7px;
+}
+.access-feedback {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 22px;
+  border: 1px solid;
+  border-radius: 10px;
+  margin: 20px 0;
+  background: #fcefee;
+  color: #8b2736;
+}
+.access-feedback > svg {
+  width: 28px;
+  height: 28px;
+  margin-top: 2px;
+}
+.access-feedback h3 {
+  font-size: 20px;
+  margin-bottom: 8px;
+}
+.access-feedback p {
+  margin: 5px 0 0;
+  line-height: 1.7;
+}
+.access-feedback.allowed {
+  background: #e6f4ec;
+  border-color: #b6dac5;
+  color: #215841;
+}
+.access-feedback.used {
+  background: #fff5dd;
+  border-color: #e6d09b;
+  color: #765116;
+}
+.access-feedback.error {
+  background: #f2f5f6;
+  border-color: #ccd7db;
+  color: #38515e;
+}
+.duplicate-confirmation {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 14px;
+  font-size: 13px;
+}
+.duplicate-confirmation input {
+  flex-shrink: 0;
+}
+.member-membership-overview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 26px;
+  margin: 0 0 26px;
+  background: white;
+  border: 1px solid #d2e2db;
+  border-left: 4px solid var(--accent);
+  border-radius: 12px;
+}
+.member-membership-overview h2 {
+  margin: 12px 0 10px;
+  font-size: 23px;
+}
+.member-membership-overview p {
+  margin: 7px 0;
+  color: var(--muted);
+  line-height: 1.75;
+}
+.member-overview-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 190px;
+  font-size: 13px;
+}
+.subscription-next-step {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 35px;
+  padding: 26px;
+  margin-bottom: 28px;
+  border: 1px solid #d2e2db;
+  border-radius: 12px;
+  background: #edf5f1;
+}
+.subscription-next-step h3 {
+  margin-bottom: 10px;
+}
+.subscription-next-step p {
+  line-height: 1.8;
+  font-size: 13px;
+  color: #425c64;
+  margin: 7px 0;
+}
+.backup-health-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin: 25px 0;
+}
+.backup-health-details dt {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.backup-health-details dd {
+  margin: 0;
+  font-weight: 650;
+}
+.role-reference {
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+  padding-top: 14px;
+}
+.role-reference summary {
+  cursor: pointer;
+  min-height: 44px;
+  font-weight: 650;
+  padding: 10px 0;
+}
+.role-reference p {
+  max-width: 720px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+#pausar-membresia,
+#registrar-membresia {
+  scroll-margin-top: 25px;
+}
+@media (max-width: 750px) {
+  .member-membership-overview {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px;
+    gap: 18px;
+  }
+  .member-overview-actions {
+    min-width: 0;
+  }
+  .subscription-next-step,
+  .backup-health-details {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .subscription-next-step {
+    padding: 20px;
+  }
+  .access-feedback {
+    padding: 18px;
+    gap: 12px;
+  }
+  .access-feedback h3 {
+    font-size: 18px;
+  }
+}

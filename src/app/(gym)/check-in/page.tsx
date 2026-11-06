@@ -3,6 +3,7 @@ import { authorize } from "@/modules/auth/permissions";
 import { lookups, queryScope, type Search } from "@/modules/reports/queries";
 import { db } from "@/infrastructure/db";
 import { QrScanner } from "@/components/qr-scanner";
+import { CheckInForm } from "@/components/check-in-form";
 import { OperationForm } from "@/components/operation-form";
 import { formatDate } from "@/shared/dates";
 export default async function CheckInPage({
@@ -94,7 +95,12 @@ export default async function CheckInPage({
         </label>
         <label className="search">
           Buscar por nombre o teléfono
-          <input name="q" defaultValue={q} placeholder="Encuentra al socio" />
+          <input
+            id="manual-member-search"
+            name="q"
+            defaultValue={q}
+            placeholder="Encuentra al socio"
+          />
         </label>
         <button className="button secondary">Buscar</button>
       </form>
@@ -109,20 +115,7 @@ export default async function CheckInPage({
             />
             <details>
               <summary>Ingresar credencial manualmente</summary>
-              <OperationForm
-                endpoint="/api/gym/check-ins"
-                fixed={{ branchId }}
-                label="Validar credencial"
-                fields={[
-                  { name: "credential", label: "Código de credencial" },
-                  {
-                    name: "serviceId",
-                    label: "Servicio",
-                    type: "select",
-                    options: serviceOptions,
-                  },
-                ]}
-              />
+              <CheckInForm branchId={branchId} services={data.services} />
             </details>
           </section>
           {q && (
@@ -135,18 +128,10 @@ export default async function CheckInPage({
                       {m.firstName} {m.lastName}
                     </h3>
                     <p>{m.phone}</p>
-                    <OperationForm
-                      endpoint="/api/gym/check-ins"
-                      fixed={{ branchId, memberId: m.id }}
-                      label="Registrar ingreso"
-                      fields={[
-                        {
-                          name: "serviceId",
-                          label: "Servicio",
-                          type: "select",
-                          options: serviceOptions,
-                        },
-                      ]}
+                    <CheckInForm
+                      branchId={branchId}
+                      memberId={m.id}
+                      services={data.services}
                     />
                   </div>
                 ))

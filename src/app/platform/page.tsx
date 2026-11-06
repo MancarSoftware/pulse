@@ -15,6 +15,7 @@ import {
 } from "@/modules/billing/status";
 import { saasPeriodLabel } from "@/modules/billing/schedule";
 import { Pagination } from "@/components/pagination";
+import { PlatformBackupHealth } from "@/components/platform-backup-health";
 import { pagination, type Search } from "@/modules/reports/queries";
 export default async function PlatformPage({
   searchParams,
@@ -49,7 +50,9 @@ export default async function PlatformPage({
     where: { status: "PENDING" },
   });
   let content: React.ReactNode;
-  if (tab === "plans") {
+  if (tab === "operations") {
+    content = <PlatformBackupHealth />;
+  } else if (tab === "plans") {
     const plans = await db.saaSPlan.findMany({
       orderBy: { createdAt: "asc" },
       take: 50,
@@ -429,6 +432,7 @@ export default async function PlatformPage({
           { key: "gyms", label: "Gimnasios" },
           { key: "plans", label: "Planes SaaS" },
           { key: "settings", label: "Datos de pago" },
+          { key: "operations", label: "Respaldos" },
         ].map((item) => (
           <Link
             key={item.key}

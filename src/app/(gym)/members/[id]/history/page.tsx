@@ -18,7 +18,7 @@ export default async function MemberHistory({
   if (ctx.role === "TRAINER") notFound();
   const { id } = await params;
   const search = await searchParams;
-  const { page, skip, take } = pagination(search);
+  const { page, skip, take } = pagination(search, 12);
   const member = await db.member.findFirst({
     where: { ...queryScope(ctx), id },
     select: { id: true, firstName: true, lastName: true },
@@ -152,10 +152,25 @@ export default async function MemberHistory({
           Historial de {member.firstName} {member.lastName}
         </h1>
       </div>
-      <nav className="tabs">
-        <Link href={`/members/${id}/history`}>Membresías</Link>
-        <Link href={`/members/${id}/history?tab=payments`}>Pagos</Link>
-        <Link href={`/members/${id}/history?tab=attendance`}>Asistencia</Link>
+      <nav className="tabs" aria-label="Historial del socio">
+        <Link
+          href={`/members/${id}/history`}
+          aria-current={tab === "memberships" ? "page" : undefined}
+        >
+          Membresías
+        </Link>
+        <Link
+          href={`/members/${id}/history?tab=payments`}
+          aria-current={tab === "payments" ? "page" : undefined}
+        >
+          Pagos
+        </Link>
+        <Link
+          href={`/members/${id}/history?tab=attendance`}
+          aria-current={tab === "attendance" ? "page" : undefined}
+        >
+          Asistencia
+        </Link>
       </nav>
       <section className="panel">
         <div className="table-wrap">{rows}</div>
@@ -163,6 +178,7 @@ export default async function MemberHistory({
           <p className="empty">No hay registros en este historial.</p>
         )}
         <Pagination
+          pageSize={12}
           page={page}
           total={count}
           search={search}

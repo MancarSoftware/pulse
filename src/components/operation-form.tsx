@@ -2,6 +2,7 @@
 import { useId, useState, type ReactNode, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { NumericInput } from "./numeric-input";
+import Link from "next/link";
 export type Field = {
   name: string;
   label: string;
@@ -38,6 +39,7 @@ export function OperationForm({
   redirectTo,
   children,
   financial = false,
+  memberDuplicateReview = false,
 }: {
   endpoint: string;
   fields: Field[];
@@ -47,6 +49,7 @@ export function OperationForm({
   redirectTo?: string;
   children?: ReactNode;
   financial?: boolean;
+  memberDuplicateReview?: boolean;
 }) {
   const router = useRouter();
   const formId = useId();
@@ -55,6 +58,10 @@ export function OperationForm({
   const [success, setSuccess] = useState("");
   const [key, setKey] = useState<string | null>(null);
   const [selected, setSelected] = useState<Record<string, string>>({});
+  const [duplicates, setDuplicates] = useState<
+    { id: string; name: string; active: boolean }[] | null
+  >(null);
+  const [duplicateConfirmed, setDuplicateConfirmed] = useState(false);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSuccess("");
@@ -78,6 +85,7 @@ export function OperationForm({
     const form = event.currentTarget;
     const formData = new FormData(form);
     const payload: Record<string, unknown> = { ...fixed };
+    if (memberDuplicateReview) payload.duplicateConfirmed = duplicateConfirmed;
     for (const f of fields)
       payload[f.name] =
         f.type === "checkbox"
@@ -100,6 +108,22 @@ export function OperationForm({
       });
       const result = await response.json();
       if (!response.ok) {
+        if (
+          memberDuplicateReview &&
+          result.error?.code === "DUPLICATE_MEMBER"
+        ) {
+          setDuplicateConfirmed(false);
+          setDuplicates(
+            Array.isArray(result.error.matches)
+              ? result.error.matches.filter(
+                  (item: { id?: unknown; name?: unknown; active?: unknown }) =>
+                    typeof item?.id === "string" &&
+                    typeof item?.name === "string" &&
+                    typeof item?.active === "boolean",
+                )
+              : [],
+          );
+        }
         const details = result.error?.fields
           ? Object.values(result.error.fields).flat().join(". ")
           : "";
@@ -127,7 +151,18 @@ export function OperationForm({
     }
   }
   return (
-    <form onSubmit={submit} className="operation-form">
+    <form
+      onSubmit={submit}
+      className="operation-form"
+      onChange={(event) => {
+        const target = event.target;
+        if (
+          target instanceof HTMLInputElement &&
+          ["phone", "email", "firstName", "lastName"].includes(target.name)
+        )
+          setDuplicateConfirmed(false);
+      }}
+    >
       <div className="form-grid">
         {fields.map((f) =>
           f.type === "multiselect" ? (
@@ -273,6 +308,36 @@ export function OperationForm({
         )}
       </div>
       {children}
+      {duplicates && (
+        <section className="notice warning" aria-label="Revisar coincidencias">
+          <strong>Revisa si el socio ya está registrado</strong>
+          <ul>
+            {duplicates.map((item) => (
+              <li key={item.id}>
+                <Link href={`/members/${encodeURIComponent(item.id)}`}>
+                  {item.name}
+                </Link>
+                {!item.active && " · Deshabilitado"}
+              </li>
+            ))}
+          </ul>
+          {!duplicates.length && (
+            <p>
+              Hay una coincidencia en otra sucursal. Pide al propietario que
+              revise el registro.
+            </p>
+          )}
+          <label className="duplicate-confirmation">
+            <input
+              type="checkbox"
+              checked={duplicateConfirmed}
+              onChange={(event) => setDuplicateConfirmed(event.target.checked)}
+              required
+            />
+            Revisé las coincidencias y confirmo que son personas distintas.
+          </label>
+        </section>
+      )}
       {error && (
         <p className="notice danger" role="alert">
           {error}

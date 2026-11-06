@@ -145,6 +145,24 @@ test("owner creates organization, opens protected data and logs out", async ({
     page.getByText(/Tu pago está pendiente de revisión/),
   ).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(
+    page.getByRole("region", { name: "Próximo paso de suscripción" }),
+  ).toContainText("suspendido");
+  await page.goto("/platform?tab=operations");
+  await expect(
+    page.getByRole("region", { name: "Salud de respaldos" }),
+  ).toBeVisible();
+  await page.setViewportSize({ width: 375, height: 1000 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: ".local/platform-backups-375.png",
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/platform");
   const paymentRow = page.getByRole("row").filter({ hasText: plan.name });
   await paymentRow.getByRole("button", { name: "Revisar y aprobar" }).click();

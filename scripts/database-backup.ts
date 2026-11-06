@@ -3,6 +3,7 @@ import {
   restoreDatabaseBackup,
   verifyDatabaseBackup,
 } from "./lib/database-backup";
+import { recordBackupStatus } from "../src/modules/operations/backup-health";
 try {
   const [action, filename] = process.argv.slice(2);
   if (action === "verify" && filename) {
@@ -21,10 +22,18 @@ try {
     );
     console.log("Restauración completada en la base de prueba.");
   } else if (action === "create" && process.env.DATABASE_URL) {
-    await createDatabaseBackup(
-      process.env.DATABASE_URL,
-      process.env.BACKUP_DIRECTORY || ".local/backups",
-    );
+    const directory = process.env.BACKUP_DIRECTORY || ".local/backups";
+    await recordBackupStatus(directory, "RUNNING");
+    try {
+      await createDatabaseBackup(
+        process.env.DATABASE_URL,
+        process.env.BACKUP_DIRECTORY || ".local/backups",
+      );
+      await recordBackupStatus(directory, "SUCCESS");
+    } catch (error) {
+      await recordBackupStatus(directory, "FAILED");
+      throw error;
+    }
     console.log("Respaldo cifrado creado y verificado.");
   } else
     throw new Error(
