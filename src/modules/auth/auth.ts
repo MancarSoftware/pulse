@@ -1,36 +1,17 @@
-import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
-import { db } from "@/infrastructure/db";
-import { readEnvironment } from "@/infrastructure/env";
-const env = readEnvironment();
-export const auth = betterAuth({
-  database: prismaAdapter(db, { provider: "postgresql" }),
-  secret: env.BETTER_AUTH_SECRET,
-  baseURL: env.BETTER_AUTH_URL,
-  trustedOrigins: [env.BETTER_AUTH_URL],
-  emailAndPassword: {
-    enabled: true,
-    minPasswordLength: 12,
-    maxPasswordLength: 128,
-    autoSignIn: true,
-  },
-  session: {
-    expiresIn: 60 * 60 * 12,
-    updateAge: 60 * 30,
-    cookieCache: { enabled: false },
-  },
-  rateLimit: {
-    enabled: true,
-    storage: "database",
-    window: 60,
-    max: 60,
-    customRules: {
-      "/sign-in/email": { window: 60, max: 5 },
-      "/sign-up/email": { window: 60, max: 3 },
-    },
-  },
-  advanced: {
-    useSecureCookies: env.BETTER_AUTH_URL.startsWith("https://"),
-    defaultCookieAttributes: { httpOnly: true, sameSite: "lax" },
-  },
-});
+import { createGymoraAuth } from "./config";
+import { AppError } from "@/shared/errors";
+import { after } from "next/server";
+export const auth = createGymoraAuth(undefined, (task) =>
+  after(() => task.then(() => undefined)),
+);
+export function requireVerifiedEmail(user: { emailVerified: boolean }) {
+  if (
+    auth.options.emailAndPassword?.requireEmailVerification &&
+    !user.emailVerified
+  )
+    throw new AppError(
+      "EMAIL_NOT_VERIFIED",
+      "Confirma tu correo antes de continuar.",
+      403,
+    );
+}

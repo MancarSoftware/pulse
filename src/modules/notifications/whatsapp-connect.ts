@@ -3,7 +3,11 @@ import { z } from "zod";
 import { db } from "@/infrastructure/db";
 import type { Context } from "@/modules/auth/permissions";
 import { AppError } from "@/shared/errors";
-import { MetaSignupApi, whatsappPlatform } from "./whatsapp-platform";
+import {
+  MetaSignupApi,
+  whatsappPlatform,
+  whatsappSetupChecklist,
+} from "./whatsapp-platform";
 import { openWhatsApp, sealWhatsApp } from "./whatsapp-secrets";
 import { whatsAppConfig, type WhatsAppConfig } from "./whatsapp-provider";
 import { audit } from "@/modules/transactions/service";
@@ -241,6 +245,7 @@ export async function whatsappPublicStatus(organizationId: string) {
   const platform = whatsappPlatform();
   const ready = row ? !!(await resolveWhatsAppConfig(organizationId)) : false;
   return {
+    setup: whatsappSetupChecklist(),
     connection: row
       ? {
           ...row,

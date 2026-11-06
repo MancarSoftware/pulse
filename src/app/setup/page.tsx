@@ -6,6 +6,11 @@ import { OperationForm } from "@/components/operation-form";
 export default async function Setup() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/login");
+  if (
+    auth.options.emailAndPassword?.requireEmailVerification &&
+    !session.user.emailVerified
+  )
+    redirect("/verify-email");
   if (await db.staff.findUnique({ where: { userId: session.user.id } }))
     redirect("/dashboard");
   return (

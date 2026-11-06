@@ -21,7 +21,19 @@ const platform = { appId: "123", configId: "456", version: "v24.0" };
 it("explains missing platform setup without loading Meta or asking for tokens", () => {
   const fetch = vi.fn();
   vi.stubGlobal("fetch", fetch);
-  render(<WhatsAppConnect platform={null} connection={null} owner />);
+  render(
+    <WhatsAppConnect
+      platform={null}
+      connection={null}
+      owner
+      setup={[
+        { label: "Conexión empresarial con Meta habilitada", ready: false },
+      ]}
+    />,
+  );
+  expect(
+    screen.getByRole("region", { name: "Preparación de WhatsApp" }),
+  ).toHaveTextContent("Pendiente");
   expect(
     screen.getByRole("button", { name: "Conectar WhatsApp" }),
   ).toBeDisabled();

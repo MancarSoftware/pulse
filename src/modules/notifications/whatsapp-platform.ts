@@ -28,6 +28,41 @@ export function whatsappPlatform() {
   return result.success ? result.data : null;
 }
 export type WhatsAppPlatform = NonNullable<ReturnType<typeof whatsappPlatform>>;
+export function whatsappSetupChecklist(input: NodeJS.ProcessEnv = process.env) {
+  const numeric = (value: string | undefined) => !!value && /^\d+$/.test(value);
+  const template = (value: string | undefined) =>
+    !!value && /^[a-z0-9_]+$/.test(value);
+  let https = false;
+  try {
+    https = new URL(applicationUrl(input) || "").protocol === "https:";
+  } catch {
+    /* Not yet configured. */
+  }
+  return [
+    { label: "Conexión segura del sistema (HTTPS)", ready: https },
+    {
+      label: "Conexión empresarial con Meta habilitada",
+      ready:
+        numeric(input.WHATSAPP_META_APP_ID) &&
+        numeric(input.WHATSAPP_META_CONFIG_ID) &&
+        !!input.WHATSAPP_META_APP_SECRET &&
+        /^v\d+\.\d+$/.test(input.WHATSAPP_GRAPH_VERSION || ""),
+    },
+    {
+      label: "Protección de las credenciales habilitada",
+      ready: /^[a-f0-9]{64}$/i.test(input.WHATSAPP_ENCRYPTION_KEY || ""),
+    },
+    {
+      label: "Plantillas de bienvenida y renovación configuradas",
+      ready:
+        template(input.WHATSAPP_WELCOME_TEMPLATE) &&
+        template(input.WHATSAPP_RENEWAL_TEMPLATE) &&
+        /^[a-z]{2}(?:_[A-Z]{2})?$/.test(
+          input.WHATSAPP_TEMPLATE_LANGUAGE || "es",
+        ),
+    },
+  ];
+}
 export class MetaSignupApi {
   constructor(private platform: WhatsAppPlatform) {}
   async request(path: string, token?: string, body?: Record<string, string>) {

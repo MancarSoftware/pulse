@@ -1,5 +1,41 @@
 @import "tailwindcss";
 
+.whatsapp-setup-checklist {
+  margin: 20px 0;
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.whatsapp-setup-checklist h4 {
+  margin: 0 0 8px;
+}
+.whatsapp-setup-checklist ul {
+  padding: 0;
+  margin: 14px 0;
+  list-style: none;
+}
+.whatsapp-setup-checklist li {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 0;
+  font-size: 13px;
+  border-bottom: 1px solid var(--line);
+}
+.whatsapp-setup-checklist li > span {
+  flex: 1;
+  min-width: 150px;
+}
+.whatsapp-setup-checklist li > svg {
+  color: var(--accent);
+}
+.whatsapp-setup-checklist li > strong {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 :root {
   --ink: #192a32;
   --muted: #63737b;

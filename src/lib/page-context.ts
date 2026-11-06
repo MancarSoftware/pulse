@@ -6,6 +6,8 @@ export async function pageContext(options: { allowSuspended?: boolean } = {}) {
   try {
     return await getContext(await headers(), options);
   } catch (error) {
+    if (error instanceof AppError && error.code === "EMAIL_NOT_VERIFIED")
+      redirect("/verify-email");
     if (error instanceof AppError && error.code === "UNAUTHENTICATED")
       redirect("/login");
     if (error instanceof AppError && error.code === "SETUP_REQUIRED")

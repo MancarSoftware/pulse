@@ -30,15 +30,26 @@ export function AuthForm({
         ? await client.signUp.email({
             ...values,
             name: String(data.get("name")),
+            callbackURL: "/login?verified=1",
           })
-        : await client.signIn.email(values);
+        : await client.signIn.email({ ...values, callbackURL: "/dashboard" });
+      if (result.error?.code === "EMAIL_NOT_VERIFIED") {
+        router.push("/verify-email");
+        return;
+      }
       if (result.error)
         throw new Error(
           register
             ? "No se pudo crear la cuenta. Revisa los datos o intenta iniciar sesión."
             : "No se pudo iniciar sesión. Revisa tus credenciales o inténtalo más tarde.",
         );
-      router.push(register ? "/setup" : "/dashboard");
+      router.push(
+        register
+          ? result.data?.token
+            ? "/setup"
+            : "/verify-email"
+          : "/dashboard",
+      );
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo conectar");

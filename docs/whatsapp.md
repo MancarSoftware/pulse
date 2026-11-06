@@ -27,6 +27,8 @@ La configuración anterior mediante `WHATSAPP_ORGANIZATION_ID`, `WHATSAPP_ACCESS
 
 El estado aparece en Configuración → WhatsApp y en el perfil del socio. Sin credenciales válidas no se contacta a Meta. La disponibilidad del worker y del proveedor debe supervisarse en el despliegue.
 
+Cuando la conexión guiada todavía no está disponible, Configuración → WhatsApp muestra un listado seguro de preparación: HTTPS, conexión empresarial de Meta, protección de credenciales y nombres/idioma de plantillas. Son comprobaciones de configuración, no validaciones de permisos ni aprobación real de Meta. No se muestran secretos. La aprobación real de las plantillas se sigue comprobando al autorizar y revisar la conexión. El propietario no puede saltar estos requisitos escribiendo únicamente su número.
+
 ## Plantillas propuestas
 
 Encabezado: imagen. El sistema carga directamente el PNG del QR en Meta y usa su ID de medio; no publica la credencial en una URL pública.

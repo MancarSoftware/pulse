@@ -1,4 +1,4 @@
-import { auth } from "./auth";
+import { auth, requireVerifiedEmail } from "./auth";
 import { db } from "@/infrastructure/db";
 import { AppError } from "@/shared/errors";
 import type { Context } from "./permissions";
@@ -10,6 +10,7 @@ export async function getContext(
   const session = await auth.api.getSession({ headers });
   if (!session)
     throw new AppError("UNAUTHENTICATED", "Inicia sesión para continuar", 401);
+  requireVerifiedEmail(session.user);
   const staff = await db.staff.findUnique({
     where: { userId: session.user.id },
   });

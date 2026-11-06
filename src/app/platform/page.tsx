@@ -24,6 +24,8 @@ export default async function PlatformPage({
   try {
     await platformContext(await headers());
   } catch (error) {
+    if (error instanceof AppError && error.code === "EMAIL_NOT_VERIFIED")
+      redirect("/verify-email");
     if (error instanceof AppError && error.code === "UNAUTHENTICATED")
       redirect("/login");
     if (error instanceof AppError && error.code === "FORBIDDEN")

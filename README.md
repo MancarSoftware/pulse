@@ -89,6 +89,8 @@ El seed se habilita exclusivamente con `ALLOW_DEMO_SEED=true` y `DEMO_PASSWORD` 
 
 ## Verificación
 
+Recuperación y verificación de cuentas: [configuración de correo](docs/account-recovery.md). Respaldos cifrados, tarea diaria local y prueba de restauración: [operación de respaldos](docs/backups.md). La entrega real de correo y WhatsApp requiere configurar los proveedores; las pruebas usan destinatarios ficticios y proveedores simulados.
+
 Crear `.env.test` con una base distinta cuyo nombre termine en `_test`, un secreto propio y `BETTER_AUTH_URL=http://localhost:3000`. Aplicar migraciones a esa base:
 
 ```sh

@@ -1,4 +1,4 @@
-import { auth } from "@/modules/auth/auth";
+import { auth, requireVerifiedEmail } from "@/modules/auth/auth";
 import { db } from "@/infrastructure/db";
 import { AppError } from "@/shared/errors";
 export async function requirePlatformAdmin(userId: string) {
@@ -14,6 +14,7 @@ export async function platformContext(headers: Headers) {
   const session = await auth.api.getSession({ headers });
   if (!session)
     throw new AppError("UNAUTHENTICATED", "Inicia sesión para continuar", 401);
+  requireVerifiedEmail(session.user);
   await requirePlatformAdmin(session.user.id);
   return { userId: session.user.id };
 }

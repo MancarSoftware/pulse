@@ -89,10 +89,12 @@ export function WhatsAppConnect({
   platform,
   connection,
   owner,
+  setup,
 }: {
   platform: Platform | null;
   connection: Connection | null;
   owner: boolean;
+  setup?: { label: string; ready: boolean }[];
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -286,6 +288,32 @@ export function WhatsAppConnect({
           sistema debe completar la configuración inicial con Meta; después
           podrás conectar aquí tu número.
         </p>
+      )}
+      {!platform && setup && (
+        <section
+          aria-label="Preparación de WhatsApp"
+          className="whatsapp-setup-checklist"
+        >
+          <h4>Antes de conectar tu número</h4>
+          <p className="muted">
+            La administración de Gymora debe completar lo siguiente. No
+            necesitas copiar claves ni crear otra cuenta aquí.
+          </p>
+          <ul>
+            {setup.map((item) => (
+              <li key={item.label}>
+                <Icon name={item.ready ? "check" : "clock"} />
+                <span>{item.label}</span>
+                <strong>{item.ready ? "Configurado" : "Pendiente"}</strong>
+              </li>
+            ))}
+          </ul>
+          <p className="muted">
+            Después conectarás tu número y se comprobará la aprobación de las
+            plantillas en Meta. Los mensajes requieren un procesador activo; una
+            aceptación de Meta no confirma entrega ni lectura.
+          </p>
+        </section>
       )}
       {!owner && (
         <p className="muted">
